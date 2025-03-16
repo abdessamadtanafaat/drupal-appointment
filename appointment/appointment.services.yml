@@ -1,0 +1,4 @@
+services:
+  appointment.manager:
+    class: 'Drupal\appointment\Service\AppointmentManagerService'
+    arguments: ['@entity_type.manager','@uuid']

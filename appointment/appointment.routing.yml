@@ -1,0 +1,7 @@
+appointment.list:
+  path: '/admin/appointments'
+  defaults:
+    _controller: 'Drupal\appointment\Controller\AppointmentController::list'
+    _title: 'Appointments'
+  requirements:
+    _permission: 'administer appointments'

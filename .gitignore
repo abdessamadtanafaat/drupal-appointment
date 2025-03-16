@@ -1,0 +1,35 @@
+# Ignore Drupal core files and vendor dependencies
+/core/
+/vendor/
+
+# Ignore the sites files directory (which contains temporary and uploaded files)
+sites/*/files/
+
+# Ignore Composer files (if you're using Composer)
+composer.lock
+
+# Ignore IDE/editor configuration files
+.idea/
+.vscode/
+*.sublime-workspace
+*.sublime-project
+
+# Ignore OS-specific files
+.DS_Store
+Thumbs.db
+
+# Ignore temporary files like logs
+*.log
+
+# Ignore Drush configuration files
+.drush/
+
+# Ignore any local configuration files
+*.local
+
+# Ignore PHPUnit and test files if not needed for version control
+tests/
+phpunit.xml
+
+# Ignore node_modules if applicable (if you are using a front-end build system)
+node_modules/

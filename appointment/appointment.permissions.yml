@@ -1,0 +1,30 @@
+# Admin Permissions
+'administer appointments':
+  title: 'Administer appointment settings'
+  description: 'Allows users to configure appointment settings'
+  restrict access: true
+
+# Adviser Permissions
+'view own appointments':
+  title: 'View own appointments'
+  description: 'Allows users to view their own appointments'
+'edit own appointments':
+  title: 'Edit own appointments'
+  description: 'Allows users to edit their own appointments'
+'delete own appointments':
+  title: 'Delete own appointments'
+  description: 'Allows users to delete their own appointments'
+
+# General User Permissions
+'create appointment':
+  title: 'Create an appointment'
+  description: 'Allows users to create new appointments'
+'view any appointment':
+  title: 'View any appointment'
+  description: 'Allows users to view all appointments'
+'edit any appointment':
+  title: 'Edit any appointment'
+  description: 'Allows users to edit any appointment'
+'delete any appointment':
+  title: 'Delete any appointment'
+  description: 'Allows users to delete any appointment'
