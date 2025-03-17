@@ -2,3 +2,6 @@ services:
   appointment.manager:
     class: 'Drupal\appointment\Service\AppointmentManagerService'
     arguments: ['@entity_type.manager','@uuid']
+  appointment.auto_increment_id:
+    class: 'Drupal\appointment\Service\AutoIncrementIdService'
+    arguments: ['@config.factory', '@logger.factory']

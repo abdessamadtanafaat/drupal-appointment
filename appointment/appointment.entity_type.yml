@@ -1,28 +1,28 @@
-appointment:
-  label: "Appointment"
-  description: "Stores appointment details"
-  entity_class: '\Drupal\appointment\Entity\AppointmentEntity'
-  handlers:
-    access: 'Drupal\appointment\AppointmentAccessControlHandler'
-    storage: 'Drupal\Core\Entity\Sql\SqlContentEntityStorage'
-    form:
-      default: 'Drupal\appointment\Form\AppointmentForm'
-      add: 'Drupal\appointment\Form\AppointmentForm'
-      edit: 'Drupal\appointment\Form\AppointmentForm'
-      delete: 'Drupal\Core\Entity\EntityDeleteForm'
-    route_provider:
-      html: 'Drupal\Core\Entity\Routing\AdminHtmlRouteProvider'
-  base_table: 'appointment'
-  translatable: FALSE
-  admin_permission: 'administer appointments'
-  entity_keys:
-    id: 'id'
-    uuid: 'uuid'
-    label: 'name'
-  links:
-    canonical: '/admin/appointment/{appointment}'
-    add-form: '/admin/appointment/add'
-    edit-form: '/admin/appointment/{appointment}/edit'
-    delete-form: '/admin/appointment/{appointment}/delete'
-    collection: '/admin/appointment'
-  field_ui_base_route: 'appointment.settings'
+#appointment:
+#  label: "Appointment"
+#  description: "Stores appointment details"
+#  entity_class: '\Drupal\appointment\Entity\AppointmentEntity'
+#  handlers:
+#    access: 'Drupal\appointment\AppointmentAccessControlHandler'
+#    storage: 'Drupal\Core\Entity\Sql\SqlContentEntityStorage'
+#    form:
+#      default: 'Drupal\appointment\Form\AppointmentForm'
+#      add: 'Drupal\appointment\Form\AppointmentForm'
+#      edit: 'Drupal\appointment\Form\AppointmentForm'
+#      delete: 'Drupal\Core\Entity\EntityDeleteForm'
+#    route_provider:
+#      html: 'Drupal\Core\Entity\Routing\AdminHtmlRouteProvider'
+#  base_table: 'appointment'
+#  translatable: FALSE
+#  admin_permission: 'administer appointments'
+#  entity_keys:
+#    id: 'id'
+#    uuid: 'uuid'
+#    label: 'name'
+#  links:
+#    canonical: '/admin/appointment/{appointment}'
+#    add-form: '/admin/appointment/add'
+#    edit-form: '/admin/appointment/{appointment}/edit'
+#    delete-form: '/admin/appointment/{appointment}/delete'
+#    collection: '/admin/appointment'
+#  field_ui_base_route: 'appointment.settings'

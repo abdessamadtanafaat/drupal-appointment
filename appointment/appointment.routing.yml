@@ -5,3 +5,126 @@ appointment.list:
     _title: 'Appointments'
   requirements:
     _permission: 'administer appointments'
+
+appointment.create:
+  path: '/appointments/create'
+  defaults:
+    _controller: '\Drupal\appointment\Controller\AppointmentController::createAppointment'
+    _title: 'Create Appointment'
+  requirements:
+    _permission: 'administer site configuration'
+
+#appointment.choose_agency:
+#  path: '/prendre-un-rendez-vous'
+#  defaults:
+#    _controller: '\Drupal\appointment\Controller\AppointmentController::chooseAgency'
+#    _title: 'Choose an Agency'
+#  requirements:
+#    _permission: 'access content'
+
+
+#appointment.select_agency:
+#  path: '/agency/select'
+#  defaults:
+#    _controller: '\Drupal\appointment\Controller\AppointmentController::selectAgency'
+#  requirements:
+#    _access: 'TRUE'
+#  methods: [POST]
+
+#  appointment.agency_selection:
+#    path: '/prendre-un-rendez-vous'
+#    defaults:
+#      _controller: '\Drupal\appointment\Controller\AgencySelectionController::selectAgency'
+#    requirements:
+#      _access: 'TRUE'
+
+#appointment.agency_selection:
+#  path: '/prendre-un-rendez-vous'
+#  defaults:
+#    _form: '\Drupal\appointment\Form\AgencySelectionForm'
+#  requirements:
+#    _access: 'TRUE'
+#
+#appointment.appointment_type_selection:
+#  path: '/prendre-un-rendez-vous'
+#  defaults:
+#    _form: '\Drupal\appointment\Form\AppointmentTypeSelectionForm'
+#  requirements:
+#    _access: 'TRUE'
+
+
+appointment_booking.booking_form:
+  path: '/prendre-un-rendez-vous'
+  defaults:
+    _form: '\Drupal\appointment\Form\BookingForm'
+    _title: 'Book an Appointment'
+  requirements:
+    _permission: 'access content'
+
+#appointment.agencies:
+#  path: '/prendre-un-rendez-vous'
+#  defaults:
+#    _controller: '\Drupal\appointment\Controller\AppointmentController::agenciesPage'
+#    _title: 'Agencies'
+#  requirements:
+#    _permission: 'access content'
+
+
+appointment.admin_appointments:
+  path: '/admin/structure/appointment'
+  defaults:
+    _controller: '\Drupal\appointment\Controller\AppointmentController::adminList'
+    _title: 'All Appointments'
+  requirements:
+    _permission: 'administer site configuration'
+
+appointment.user_appointments:
+  path: '/user/appointments'
+  defaults:
+    _controller: '\Drupal\appointment\Controller\AppointmentController::userList'
+    _title: 'My Appointments'
+  requirements:
+    _permission: 'access content'
+
+
+appointment.store_agency:
+  path: '/store-agency'
+  defaults:
+    _controller: '\Drupal\appointment\Controller\AgencySelectionController::storeAgency'
+  requirements:
+    _permission: 'access content'
+  methods: [POST]
+
+appointment.agency_list:
+  path: '/admin/config/appointment/agencies'
+  defaults:
+    _entity_list: 'agency'
+    _title: 'Agencies'
+  requirements:
+    _permission: 'administer agency'
+
+appointment.agency_add:
+  path: '/admin/config/appointment/agency/add'
+  defaults:
+    _form: '\Drupal\appointment\Form\AgencyForm'
+    _title: 'Add Agency'
+  requirements:
+    _permission: 'administer agency'
+
+appointment.agency_edit:
+  path: '/admin/config/appointment/agency/{agency}/edit'
+  defaults:
+    _form: '\Drupal\appointment\Form\AgencyForm'
+    _title: 'Edit Agency'
+  requirements:
+    _permission: 'administer agency'
+
+appointment.agency_delete:
+  path: '/admin/config/appointment/agency/{agency}/delete'
+  defaults:
+    _form: '\Drupal\appointment\Form\AgencyDeleteForm'
+    _title: 'Delete Agency'
+  requirements:
+    _permission: 'administer agency'
+
+

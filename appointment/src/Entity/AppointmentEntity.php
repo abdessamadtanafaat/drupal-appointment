@@ -6,6 +6,7 @@ use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\EntityChangedTrait;
 use Drupal\appointment\Entity\AppointmentEntityInterface;
+use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\user\UserInterface;
 
 /**
@@ -40,6 +41,7 @@ use Drupal\user\UserInterface;
  */
 class AppointmentEntity extends ContentEntityBase implements AppointmentEntityInterface {
   use EntityChangedTrait;
+
 
   /**
    * Gets the appointment name.

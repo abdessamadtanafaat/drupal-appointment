@@ -4,6 +4,8 @@ namespace Drupal\appointment\Entity;
 
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\appointment\Entity\AgencyEntityInterface;
+use Drupal\appointment\Service\AutoIncrementIdService;
+use Drupal\Core\DependencyInjection\ContainerInterface;
 
 /**
  * Defines the Agency entity.
@@ -24,6 +26,12 @@ use Drupal\appointment\Entity\AgencyEntityInterface;
  *   entity_keys = {
  *     "id" = "id",
  *     "label" = "name"
+ *   },
+ *   config_export = {
+ *     "id",
+ *     "name",
+ *     "location",
+ *     "email"
  *   },
  *   links = {
  *     "edit-form" = "/admin/config/appointment/agency/{agency}/edit",
@@ -51,12 +59,56 @@ class AgencyEntity extends ConfigEntityBase implements AgencyEntityInterface {
    *
    * @var string
    */
-  protected $location;
+  public $location;
 
   /**
    * The Agency contact email.
    *
    * @var string
    */
-  protected $email;
+  public $email;
+
+  /**
+   * The auto-increment service.
+   *
+   * @var \Drupal\appointment\Service\AutoIncrementIdService
+   */
+  protected $autoIncrementIdService;
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __construct(array $values = [], $id = NULL) {
+    parent::__construct($values, $id);
+    // Use the auto-increment service to set the ID if not already set.
+    if (empty($this->id)) {
+      $this->id = \Drupal::service('appointment.auto_increment_id')->getNextId();
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setId($id) {
+    $this->id = $id;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getId() {
+    return $this->id;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(array $values = []) {
+    $entity = parent::create($values);
+    // Ensure ID is set correctly on creation.
+    if (empty($entity->id)) {
+      $entity->id = \Drupal::service('appointment.auto_increment_id')->getNextId();
+    }
+    return $entity;
+  }
 }

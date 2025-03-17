@@ -1,0 +1,39 @@
+<?php
+//
+///**
+// * Implements hook_entity_type_build().
+// */
+//function appointment_entity_type_build(array &$entity_types) {
+//  // Define custom entity 'agency'.
+//  $entity_types['agency'] = array(
+//    'class' => 'Drupal\appointment\Entity\AgencyEntity',
+//    'label' => t('Agency'),
+//    'module' => 'appointment',
+//    'base_table' => 'agency',
+//    'entity_keys' => array(
+//      'id' => 'id',
+//      'label' => 'name',
+//    ),
+//    'fieldable' => TRUE,
+//    'admin_permission' => 'administer agency',
+//  );
+//}
+
+use Drupal\Core\Asset\AttachedAssetsInterface;
+
+/**
+ * Implements hook_preprocess_HOOK() for page templates.
+ */
+//function appointment_preprocess_page(array &$variables) {
+//  if (\Drupal::routeMatch()->getRouteName() == 'appointment.choose_agency') {
+//    $variables['#attached']['library'][] = 'appointment/appointment_styles';
+//  }
+//}
+
+//function appointment_page_attachments(array &$attachments) {
+//  if (\Drupal::routeMatch()->getRouteName() == 'appointment.choose_agency') {
+//    $attachments['#attached']['library'][] = 'appointment/appointment_styles';
+//  }
+//}
+
+
