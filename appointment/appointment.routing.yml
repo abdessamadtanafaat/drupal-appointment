@@ -86,17 +86,8 @@ appointment.user_appointments:
   requirements:
     _permission: 'access content'
 
-
-appointment.store_agency:
-  path: '/store-agency'
-  defaults:
-    _controller: '\Drupal\appointment\Controller\AgencySelectionController::storeAgency'
-  requirements:
-    _permission: 'access content'
-  methods: [POST]
-
 appointment.agency_list:
-  path: '/admin/config/appointment/agencies'
+  path: '/admin/structure/appointment/agencies'
   defaults:
     _entity_list: 'agency'
     _title: 'Agencies'
@@ -104,7 +95,7 @@ appointment.agency_list:
     _permission: 'administer agency'
 
 appointment.agency_add:
-  path: '/admin/config/appointment/agency/add'
+  path: '/admin/structure/appointment/agency/add'
   defaults:
     _form: '\Drupal\appointment\Form\AgencyForm'
     _title: 'Add Agency'
@@ -112,19 +103,37 @@ appointment.agency_add:
     _permission: 'administer agency'
 
 appointment.agency_edit:
-  path: '/admin/config/appointment/agency/{agency}/edit'
+  path: '/admin/structure/appointment/agency/{agency}/edit'
   defaults:
-    _form: '\Drupal\appointment\Form\AgencyForm'
+    _form: 'Drupal\appointment\Form\AgencyForm'
     _title: 'Edit Agency'
   requirements:
     _permission: 'administer agency'
+    agency: 'agency_\d+'  # This accepts the "agency_" prefix followed by digits.
 
 appointment.agency_delete:
-  path: '/admin/config/appointment/agency/{agency}/delete'
+  path: '/admin/structure/appointment/agency/{agency}/delete'
   defaults:
-    _form: '\Drupal\appointment\Form\AgencyDeleteForm'
+    _form: 'Drupal\appointment\Form\AgencyDeleteForm'
     _title: 'Delete Agency'
   requirements:
     _permission: 'administer agency'
+    agency: 'agency_\d+'  # This accepts the "agency_" prefix followed by digits.
 
 
+entity.appointment.collection:
+  path: 'admin/structure/appointment'
+  defaults:
+    _entity_list: 'appointment'
+    _title: 'Appointments'
+  requirements:
+    _permission: 'access content'
+
+
+appointment.store_agency:
+  path: '/appointment/store-agency'
+  defaults:
+    _controller: '\Drupal\appointment\Controller\AgencySelectionController::storeAgency'
+    _format: 'json'
+  requirements:
+    _permission: 'access content'

@@ -1,10 +1,13 @@
-.agency-card-list {
+/* css/appointment-style.css */
+.agency-cards-container {
   display: flex;
   flex-wrap: wrap;
   gap: 20px;
 }
 
 .agency-card {
+  text-align: center;
+  cursor: pointer;
   border: 1px solid #ddd;
   border-radius: 8px;
   padding: 15px;
@@ -14,33 +17,12 @@
   transition: transform 0.3s ease;
 }
 
-.agency-card h3 {
-  margin: 0;
-  font-size: 1.2em;
-  color: #333;
-}
-
-.agency-card p {
-  margin: 5px 0;
-  font-size: 1em;
-  color: #666;
-}
-
-.agency-card button {
-  margin-top: 10px;
-  padding: 5px 10px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
 .agency-card button:hover {
   background-color: #0056b3;
 }
 
 .agency-card:hover {
   transform: translateY(-5px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
+

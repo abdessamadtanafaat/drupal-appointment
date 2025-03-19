@@ -1,50 +1,43 @@
 <?php
 
+
 /**
  * Implements hook_schema().
  */
 function appointment_schema() {
   $schema['appointment'] = [
-    'description' => 'Stores appointment details',
+    'description' => 'Stores appointment information.',
     'fields' => [
       'id' => [
-        'description' => 'Primary Key: Appointment ID',
+        'description' => 'Primary Key: Unique appointment ID.',
         'type' => 'serial',
         'unsigned' => TRUE,
         'not null' => TRUE,
       ],
-      'uuid' => [
-        'description' => 'Universally Unique Identifier',
-        'type' => 'varchar',
-        'length' => 128,
-        'not null' => TRUE,
-      ],
       'name' => [
-        'description' => 'Appointment name',
+        'description' => 'The name of the appointment.',
         'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,
+        'default' => '',
       ],
       'appointment_date' => [
-        'description' => 'Appointment date',
-        'type' => 'int',
-        'size' => 'big',
-        'not null' => TRUE,
+        'description' => 'The date and time of the appointment.',
+        'type' => 'datetime',
+        'not null' => FALSE, // Allow NULL values to avoid SQL errors
       ],
       'status' => [
-        'description' => 'Appointment status',
-        'type' => 'varchar',
-        'length' => 50,
-        'not null' => TRUE,
-      ],
-      'user_id' => [
-        'description' => 'User who booked the appointment',
+        'description' => 'Appointment status (active/inactive).',
         'type' => 'int',
-        'not null' => FALSE,
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 1, // 1 = Active, 0 = Inactive
       ],
     ],
     'primary key' => ['id'],
-    'unique keys' => ['uuid' => ['uuid']],
+    'indexes' => [
+      'appointment_date' => ['appointment_date'],
+    ],
   ];
 
   return $schema;

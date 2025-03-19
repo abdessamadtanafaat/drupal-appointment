@@ -17,7 +17,6 @@
 #  admin_permission: 'administer appointments'
 #  entity_keys:
 #    id: 'id'
-#    uuid: 'uuid'
 #    label: 'name'
 #  links:
 #    canonical: '/admin/appointment/{appointment}'
@@ -26,3 +25,4 @@
 #    delete-form: '/admin/appointment/{appointment}/delete'
 #    collection: '/admin/appointment'
 #  field_ui_base_route: 'appointment.settings'
+

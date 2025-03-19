@@ -3,8 +3,8 @@
 namespace Drupal\appointment\Service;
 
 use Drupal\appointment\Entity\AppointmentEntityInterface;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Component\Uuid\UuidInterface;
 
 /**
  * Handles appointment operations.
@@ -19,41 +19,24 @@ class AppointmentManagerService {
   protected $entityTypeManager;
 
   /**
-   * The UUID service.
-   *
-   * @var \Drupal\Component\Uuid\UuidInterface
-   */
-  protected $uuidService;
-
-  /**
    * Constructs a new AppointmentManagerService.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
-   * @param \Drupal\Component\Uuid\UuidInterface $uuidService
-   *   The UUID service.
    */
-  public function __construct(EntityTypeManagerInterface $entityTypeManager, UuidInterface $uuidService) {
+  public function __construct(EntityTypeManagerInterface $entityTypeManager) {
     $this->entityTypeManager = $entityTypeManager;
-    $this->uuidService = $uuidService;
 
   }
 
   /**
    * Creates a new appointment.
    */
-  public function createAppointment($name, $date, $status, $user_id) {
-
-    // Generate a UUID if not provided
-    $uuid = $this->uuidService->generate();  // Using the UUID service to generate the UUID
-
-    $appointment = $this->entityTypeManager->getStorage('appointment')->create([
-      'uuid' => $uuid,  // Manually set the UUID
-      'name' => $name,
-      'appointment_date' => $date,
-      'status' => $status,
-      'user_id' => $user_id,
-    ]);
+  public function createAppointment(array $data) : EntityInterface
+  {
+    $appointment = $this->entityTypeManager
+      ->getStorage('appointment')
+      ->create($data);
     $appointment->save();
     return $appointment;
   }

@@ -36,4 +36,62 @@ use Drupal\Core\Asset\AttachedAssetsInterface;
 //  }
 //}
 
+/**
+ * Implements hook_theme().
+ */
+function mytheme_theme($existing, $type, $theme, $path) {
+  return [
+    'agency_cards' => [
+      'render element' => 'element',
+    ],
+  ];
+}
+
+/**
+ * Theme function to render radios as cards.
+ */
+//function theme_agency_cards($variables) {
+//  $element = $variables['element'];
+//  $output = '';
+//
+//  foreach ($element['#options'] as $key => $label) {
+//    $id = $element['#id'] . '-' . $key;
+//    $output .= '<div class="agency-card">';
+//    $output .= '<input type="radio" id="' . $id . '" name="' . $element['#name'] . '" value="' . $key . '" />';
+//    $output .= '<label for="' . $id . '">';
+//    $output .= '<div class="card-content">';
+//    $output .= '<h3>' . $label . '</h3>';
+//    // Add additional content for the card (e.g., description, image, etc.).
+//    $output .= '</div>';
+//    $output .= '</label>';
+//    $output .= '</div>';
+//  }
+//
+//  return $output;
+//}
+//
+
+/**
+ * Implements hook_theme().
+ */
+/**
+ * Implements hook_theme().
+ */
+function appointment_theme($existing, $type, $theme, $path) {
+  return [
+    // Define the 'agency_card' theme hook.
+    'agency_card' => [
+      'variables' => [
+        'agency' => NULL,            // The agency entity.
+        'agency_id' => NULL,         // The agency ID.
+        'agency_edit_url' => NULL,   // The URL for editing the agency.
+        'agency_delete_url' => NULL, // The URL for deleting the agency.
+      ],
+      'template' => 'agency-card',  // The Twig template to use.
+    ],
+  ];
+}
+
+
+
 

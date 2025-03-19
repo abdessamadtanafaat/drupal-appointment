@@ -2,8 +2,17 @@ appointment_styles:
   version: 1.x
   css:
     theme:
-      css/appointment-style.css: {}
+      css/appointment-style.css: { }
+  dependencies:
+    - core/jquery
+
+appointment_scripts:
+  version: 1.x
   js:
     js/agency-selection.js: { }
   dependencies:
     - core/jquery
+    - appointment/appointment_styles
+    - core/drupal
+    - core/once
+

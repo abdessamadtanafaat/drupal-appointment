@@ -24,39 +24,42 @@ class AgencyForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, $agency = NULL) {
+    // If $agency is just an ID, load the entity
+    if (is_string($agency) || is_numeric($agency)) {
+      $agency = \Drupal::entityTypeManager()->getStorage('agency')->load($agency);
+    }
+
     // Create form elements for the Agency fields.
     $form['name'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Agency Name'),
-      '#default_value' => isset($agency) ? $agency->label() : '',
+      '#default_value' => ($agency instanceof AgencyEntity) ? $agency->label() : '',
       '#required' => TRUE,
     ];
 
     $form['location'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Location'),
-      '#default_value' => isset($agency) ? $agency->location : '',
+      '#default_value' => ($agency instanceof AgencyEntity) ? $agency->get('location')->value : '',
       '#required' => TRUE,
     ];
 
     $form['email'] = [
       '#type' => 'email',
       '#title' => $this->t('Email'),
-      '#default_value' => isset($agency) ? $agency->email : '',
+      '#default_value' => ($agency instanceof AgencyEntity) ? $agency->get('email')->value : '',
       '#required' => TRUE,
     ];
 
-    $form['actions'] = [
-      '#type' => 'actions',
-    ];
+    $form['actions'] = ['#type' => 'actions'];
 
     $form['actions']['submit'] = [
       '#type' => 'submit',
-      '#value' => isset($agency) ? $this->t('Update Agency') : $this->t('Add Agency'),
+      '#value' => ($agency instanceof AgencyEntity) ? $this->t('Update Agency') : $this->t('Add Agency'),
     ];
 
     // Pass agency ID to form state for reference during submission
-    if (isset($agency)) {
+    if ($agency instanceof AgencyEntity) {
       $form_state->set('agency_id', $agency->id());
     }
 
