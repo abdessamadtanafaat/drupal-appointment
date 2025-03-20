@@ -1,69 +1,180 @@
 <?php
 
 /**
- * Implements hook_schema().
+ * Implements hook_install().
  */
-function appointment_booking_schema() {
-  $schema['appointment'] = [
-    'description' => 'Stores appointment data.',
-    'fields' => [
-      'id' => [
-        'type' => 'serial',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-        'description' => 'Primary key for the appointment.',
-      ],
-      'agency_id' => [
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-        'description' => 'The agency ID.',
-      ],
-      'advisor_id' => [
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-        'description' => 'The advisor ID.',
-      ],
-      'appointment_type' => [
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-        'description' => 'The appointment type ID.',
-      ],
-      'date' => [
-        'type' => 'datetime',
-        'not null' => TRUE,
-        'description' => 'The date and time of the appointment.',
-      ],
-      'first_name' => [
-        'type' => 'varchar',
-        'length' => 255,
-        'not null' => TRUE,
-        'description' => 'The first name of the user.',
-      ],
-      'last_name' => [
-        'type' => 'varchar',
-        'length' => 255,
-        'not null' => TRUE,
-        'description' => 'The last name of the user.',
-      ],
-      'email' => [
-        'type' => 'varchar',
-        'length' => 255,
-        'not null' => TRUE,
-        'description' => 'The email of the user.',
-      ],
-      'phone' => [
-        'type' => 'varchar',
-        'length' => 255,
-        'not null' => TRUE,
-        'description' => 'The phone number of the user.',
-      ],
+function appointment_install() {
+  // Create the "Appointment Types" taxonomy vocabulary.
+  $vocabulary = \Drupal\taxonomy\Entity\Vocabulary::create([
+    'vid' => 'appointment_types', // Machine name of the vocabulary.
+    'name' => 'Appointment Types', // Human-readable name.
+    'description' => 'A vocabulary for appointment types.',
+  ]);
+  $vocabulary->save();
 
-    ],
-    'primary key' => ['id'],
+  // Log the creation of the vocabulary.
+  \Drupal::logger('appointment')->notice('Created taxonomy vocabulary: Appointment Types.');
+
+  // Create example terms for the vocabulary.
+  $terms = [
+    ['name' => 'Consultation', 'vid' => 'appointment_types'],
+    ['name' => 'Meeting', 'vid' => 'appointment_types'],
+    ['name' => 'Follow-up', 'vid' => 'appointment_types'],
   ];
 
-  return $schema;
+  foreach ($terms as $term_data) {
+    $term = \Drupal\taxonomy\Entity\Term::create($term_data);
+    $term->save();
+
+    // Log the creation of each term.
+    \Drupal::logger('appointment')->notice('Created taxonomy term: @term in vocabulary: @vocabulary.', [
+      '@term' => $term_data['name'],
+      '@vocabulary' => $term_data['vid'],
+    ]);
+  }
 }
+
+//
+///**
+// * Implements hook_schema().
+// */
+//function appointment_booking_schema() {
+//  $schema['appointment'] = [
+//    'description' => 'Stores appointment data.',
+//    'fields' => [
+//      'id' => [
+//        'type' => 'serial',
+//        'unsigned' => TRUE,
+//        'not null' => TRUE,
+//        'description' => 'Primary key for the appointment.',
+//      ],
+//      'agency_id' => [
+//        'type' => 'int',
+//        'unsigned' => TRUE,
+//        'not null' => TRUE,
+//        'description' => 'The agency ID.',
+//      ],
+//      'advisor_id' => [
+//        'type' => 'int',
+//        'unsigned' => TRUE,
+//        'not null' => TRUE,
+//        'description' => 'The advisor ID.',
+//      ],
+//      'appointment_type' => [
+//        'type' => 'int',
+//        'unsigned' => TRUE,
+//        'not null' => TRUE,
+//        'description' => 'The appointment type ID.',
+//      ],
+//      'date' => [
+//        'type' => 'datetime',
+//        'not null' => TRUE,
+//        'description' => 'The date and time of the appointment.',
+//      ],
+//      'first_name' => [
+//        'type' => 'varchar',
+//        'length' => 255,
+//        'not null' => TRUE,
+//        'description' => 'The first name of the user.',
+//      ],
+//      'last_name' => [
+//        'type' => 'varchar',
+//        'length' => 255,
+//        'not null' => TRUE,
+//        'description' => 'The last name of the user.',
+//      ],
+//      'email' => [
+//        'type' => 'varchar',
+//        'length' => 255,
+//        'not null' => TRUE,
+//        'description' => 'The email of the user.',
+//      ],
+//      'phone' => [
+//        'type' => 'varchar',
+//        'length' => 255,
+//        'not null' => TRUE,
+//        'description' => 'The phone number of the user.',
+//      ],
+//
+//    ],
+//    'primary key' => ['id'],
+//  ];
+//
+//  return $schema;
+//}
+//
+//
+///**
+// * Implements hook_install().
+// */
+//function booking_system_install() {
+//  // Create example agencies.
+//  $agencies = [
+//    [
+//      'name' => 'Agency A',
+//      'description' => 'This is Agency A.',
+//      'advisers' => [2, 3], // User IDs of advisers.
+//    ],
+//    [
+//      'name' => 'Agency B',
+//      'description' => 'This is Agency B.',
+//      'advisers' => [4, 5], // User IDs of advisers.
+//    ],
+//  ];
+//
+//  foreach ($agencies as $agency_data) {
+//    $agency = \Drupal::entityTypeManager()
+//      ->getStorage('agency')
+//      ->create($agency_data);
+//    $agency->save();
+//  }
+//
+//  // Create example appointments.
+//  $appointments = [
+//    [
+//      'agency_id' => 1, // Agency ID.
+//      'appointment_type' => 'consultation', // Taxonomy term name or ID.
+//      'advisor_id' => 2, // User ID of the adviser.
+//      'appointment_date' => '2023-10-15 10:00:00',
+//      'first_name' => 'John',
+//      'last_name' => 'Doe',
+//      'email' => 'john.doe@example.com',
+//      'phone' => '123-456-7890',
+//    ],
+//    [
+//      'agency_id' => 2, // Agency ID.
+//      'appointment_type' => 'meeting', // Taxonomy term name or ID.
+//      'advisor_id' => 4, // User ID of the adviser.
+//      'appointment_date' => '2023-10-16 14:00:00',
+//      'first_name' => 'Jane',
+//      'last_name' => 'Smith',
+//      'email' => 'jane.smith@example.com',
+//      'phone' => '987-654-3210',
+//    ],
+//  ];
+//
+//  foreach ($appointments as $appointment_data) {
+//    $appointment = \Drupal::entityTypeManager()
+//      ->getStorage('appointment')
+//      ->create($appointment_data);
+//    $appointment->save();
+//  }
+//
+//  /**
+//   * Implements hook_uninstall().
+//   */
+//  function appointment_uninstall() {
+//    // Clean up entities when the module is uninstalled.
+//    $agency_ids = \Drupal::entityQuery('agency')->execute();
+//    $appointment_ids = \Drupal::entityQuery('appointment')->execute();
+//
+//    $storage = \Drupal::entityTypeManager()->getStorage('agency');
+//    $entities = $storage->loadMultiple($agency_ids);
+//    $storage->delete($entities);
+//
+//    $storage = \Drupal::entityTypeManager()->getStorage('appointment');
+//    $entities = $storage->loadMultiple($appointment_ids);
+//    $storage->delete($entities);
+//  }
+//}
+//

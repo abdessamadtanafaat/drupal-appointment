@@ -45,6 +45,7 @@ use Drupal\user\EntityOwnerTrait;
  *     "label" = "label",
  *     "uuid" = "uuid",
  *     "owner" = "uid",
+ *     "changed" = "changed",
  *   },
  *   links = {
  *     "collection" = "/admin/content/agency",
@@ -76,9 +77,64 @@ final class Agency extends ContentEntityBase implements AgencyInterface {
   /**
    * {@inheritdoc}
    */
-  public static function baseFieldDefinitions(EntityTypeInterface $entity_type): array {
-
+  public static function baseFieldDefinitions(EntityTypeInterface $entity_type) {
     $fields = parent::baseFieldDefinitions($entity_type);
+
+    // Name of the agency.
+    $fields['name'] = BaseFieldDefinition::create('string')
+      ->setLabel(t('Name'))
+      ->setDescription(t('The name of the agency.'))
+      ->setRequired(TRUE)
+      ->setDisplayOptions('form', [
+        'type' => 'string_textfield',
+        'weight' => -10,
+      ])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayOptions('view', [
+        'label' => 'above',
+        'type' => 'string',
+        'weight' => -10,
+      ])
+      ->setDisplayConfigurable('view', TRUE);
+
+    // Description of the agency.
+    $fields['description'] = BaseFieldDefinition::create('text_long')
+      ->setLabel(t('Description'))
+      ->setDescription(t('A description of the agency.'))
+      ->setDisplayOptions('form', [
+        'type' => 'text_textarea',
+        'weight' => -9,
+      ])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayOptions('view', [
+        'label' => 'above',
+        'type' => 'text_default',
+        'weight' => -9,
+      ])
+      ->setDisplayConfigurable('view', TRUE);
+
+    // Advisers (entity reference to User entities).
+    $fields['advisers'] = BaseFieldDefinition::create('entity_reference')
+      ->setLabel(t('Advisers'))
+      ->setDescription(t('The advisers associated with this agency.'))
+      ->setSetting('target_type', 'user') // Reference the User entity.
+      ->setCardinality(-1) // Allow unlimited references.
+      ->setDisplayOptions('form', [
+        'type' => 'entity_reference_autocomplete_tags',
+        'weight' => -5,
+        'settings' => [
+          'match_operator' => 'CONTAINS',
+          'size' => 60,
+          'placeholder' => '',
+        ],
+      ])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayOptions('view', [
+        'label' => 'above',
+        'type' => 'entity_reference_label',
+        'weight' => -5,
+      ])
+      ->setDisplayConfigurable('view', TRUE);
 
     $fields['label'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Label'))
@@ -132,10 +188,12 @@ final class Agency extends ContentEntityBase implements AgencyInterface {
       ])
       ->setDisplayConfigurable('view', TRUE);
 
+    // Add the uid field (reference to the User entity).
     $fields['uid'] = BaseFieldDefinition::create('entity_reference')
       ->setLabel(t('Author'))
+      ->setDescription(t('The user ID of the agency author.'))
       ->setSetting('target_type', 'user')
-      ->setDefaultValueCallback(self::class . '::getDefaultEntityOwner')
+      ->setDefaultValueCallback(static::class . '::getDefaultEntityOwner')
       ->setDisplayOptions('form', [
         'type' => 'entity_reference_autocomplete',
         'settings' => [
@@ -155,7 +213,7 @@ final class Agency extends ContentEntityBase implements AgencyInterface {
 
     $fields['created'] = BaseFieldDefinition::create('created')
       ->setLabel(t('Authored on'))
-      ->setDescription(t('The time that the agency was created.'))
+      ->setDescription(t('The time that the appointment was created.'))
       ->setDisplayOptions('view', [
         'label' => 'above',
         'type' => 'timestamp',
@@ -170,9 +228,8 @@ final class Agency extends ContentEntityBase implements AgencyInterface {
 
     $fields['changed'] = BaseFieldDefinition::create('changed')
       ->setLabel(t('Changed'))
-      ->setDescription(t('The time that the agency was last edited.'));
+      ->setDescription(t('The time that the appointment was last edited.'));
 
     return $fields;
   }
-
 }

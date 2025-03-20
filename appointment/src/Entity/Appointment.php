@@ -79,14 +79,14 @@ final class Appointment extends ContentEntityBase implements AppointmentInterfac
   public static function baseFieldDefinitions(EntityTypeInterface $entity_type) {
     $fields = parent::baseFieldDefinitions($entity_type);
 
-    // Agency ID (entity reference to a taxonomy term or custom entity).
+
     $fields['agency_id'] = BaseFieldDefinition::create('entity_reference')
       ->setLabel(t('Agency'))
       ->setDescription(t('The agency for the appointment.'))
-      ->setSetting('target_type', 'taxonomy_term') // Change to your target entity type.
+      ->setSetting('target_type', 'appointment_agency') // Reference the Agency entity.
       ->setRequired(TRUE)
       ->setDisplayOptions('form', [
-        'type' => 'entity_reference_autocomplete',
+        'type' => 'entity_reference_autocomplete', // Use an autocomplete widget.
         'weight' => -10,
         'settings' => [
           'match_operator' => 'CONTAINS',
@@ -106,10 +106,14 @@ final class Appointment extends ContentEntityBase implements AppointmentInterfac
     $fields['appointment_type'] = BaseFieldDefinition::create('entity_reference')
       ->setLabel(t('Appointment Type'))
       ->setDescription(t('The type of appointment.'))
-      ->setSetting('target_type', 'taxonomy_term') // Change to your target entity type.
+      ->setSetting('target_type', 'taxonomy_term') // Reference taxonomy terms.
+      ->setSetting('handler', 'default:taxonomy_term')
+      ->setSetting('handler_settings', [
+        'target_bundles' => ['appointment_types'], // Replace with your vocabulary machine name.
+      ])
       ->setRequired(TRUE)
       ->setDisplayOptions('form', [
-        'type' => 'options_select',
+        'type' => 'options_select', // Use a select dropdown.
         'weight' => -9,
       ])
       ->setDisplayConfigurable('form', TRUE)
