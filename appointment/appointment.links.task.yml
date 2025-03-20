@@ -20,3 +20,26 @@ entity.appointment.collection:
   route_name: entity.appointment.collection
   base_route: system.admin_content
   weight: 10
+
+entity.appointment_agency.settings:
+  title: 'Settings'
+  route_name: entity.appointment_agency.settings
+  base_route: entity.appointment_agency.settings
+entity.appointment_agency.view:
+  title: 'View'
+  route_name: entity.appointment_agency.canonical
+  base_route: entity.appointment_agency.canonical
+entity.appointment_agency.edit_form:
+  title: 'Edit'
+  route_name: entity.appointment_agency.edit_form
+  base_route: entity.appointment_agency.canonical
+entity.appointment_agency.delete_form:
+  title: 'Delete'
+  route_name: entity.appointment_agency.delete_form
+  base_route: entity.appointment_agency.canonical
+  weight: 10
+entity.appointment_agency.collection:
+  title: 'Agencies'
+  route_name: entity.appointment_agency.collection
+  base_route: system.admin_content
+  weight: 10

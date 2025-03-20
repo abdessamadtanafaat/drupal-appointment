@@ -35,3 +35,7 @@ administer appointments:
 
 
 
+
+administer appointment_agency:
+  title: 'Administer agencies'
+  restrict access: true
