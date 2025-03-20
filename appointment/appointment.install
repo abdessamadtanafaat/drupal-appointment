@@ -4,33 +4,54 @@
  * Implements hook_install().
  */
 function appointment_install() {
-  // Create the "Appointment Types" taxonomy vocabulary.
-  $vocabulary = \Drupal\taxonomy\Entity\Vocabulary::create([
-    'vid' => 'appointment_types', // Machine name of the vocabulary.
-    'name' => 'Appointment Types', // Human-readable name.
-    'description' => 'A vocabulary for appointment types.',
-  ]);
-  $vocabulary->save();
+  // Check if the "Appointment Types" vocabulary already exists.
+  $vocabulary = \Drupal\taxonomy\Entity\Vocabulary::load('appointment_types');
 
-  // Log the creation of the vocabulary.
-  \Drupal::logger('appointment')->notice('Created taxonomy vocabulary: Appointment Types.');
+  if (!$vocabulary) {
+    // Create the "Appointment Types" taxonomy vocabulary.
+    $vocabulary = \Drupal\taxonomy\Entity\Vocabulary::create([
+      'vid' => 'appointment_types', // Machine name of the vocabulary.
+      'name' => 'Appointment Types', // Human-readable name.
+      'description' => 'A vocabulary for appointment types.',
+    ]);
+    $vocabulary->save();
 
-  // Create example terms for the vocabulary.
+    // Log the creation of the vocabulary.
+    \Drupal::logger('appointment')->notice('Created taxonomy vocabulary: Appointment Types.');
+  } else {
+    // Log that the vocabulary already exists.
+    \Drupal::logger('appointment')->notice('Taxonomy vocabulary "Appointment Types" already exists.');
+  }
+
+  // Define example terms for the vocabulary.
   $terms = [
     ['name' => 'Consultation', 'vid' => 'appointment_types'],
     ['name' => 'Meeting', 'vid' => 'appointment_types'],
     ['name' => 'Follow-up', 'vid' => 'appointment_types'],
   ];
 
+  // Create example terms if they don't already exist.
   foreach ($terms as $term_data) {
-    $term = \Drupal\taxonomy\Entity\Term::create($term_data);
-    $term->save();
+    $term = \Drupal::entityTypeManager()
+      ->getStorage('taxonomy_term')
+      ->loadByProperties(['name' => $term_data['name'], 'vid' => $term_data['vid']]);
 
-    // Log the creation of each term.
-    \Drupal::logger('appointment')->notice('Created taxonomy term: @term in vocabulary: @vocabulary.', [
-      '@term' => $term_data['name'],
-      '@vocabulary' => $term_data['vid'],
-    ]);
+    if (empty($term)) {
+      $term = \Drupal\taxonomy\Entity\Term::create($term_data);
+      $term->save();
+
+      // Log the creation of each term.
+      \Drupal::logger('appointment')->notice('Created taxonomy term: @term in vocabulary: @vocabulary.', [
+        '@term' => $term_data['name'],
+        '@vocabulary' => $term_data['vid'],
+      ]);
+    } else {
+      // Log that the term already exists.
+      \Drupal::logger('appointment')->notice('Taxonomy term "@term" already exists in vocabulary: @vocabulary.', [
+        '@term' => $term_data['name'],
+        '@vocabulary' => $term_data['vid'],
+      ]);
+    }
   }
 }
 
