@@ -26,3 +26,8 @@
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
+.agency-card.selected {
+  border-color: #0056b3;
+  background-color: #e0f7fa;
+}
+

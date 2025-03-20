@@ -1,43 +1,25 @@
-(function ($, Drupal) {
-  Drupal.behaviors.agencySelection = {
-    attach: function (context, settings) {
-      // Ensure the behavior is attached only once.
-      once('agency-selection', '.agency-card', context).forEach(function (card) {
-        $(card).on('click', function () {
-          var agencyId = $(this).data('agency-id');
+(function ($) {
+  $(document).ready(function () {
+    $('.agency-card').click(function () {
+      // Get the selected agency ID from the clicked card.
+      var agencyId = $(this).data('agency-id');
 
-          // Set the hidden input value.
-          $('#edit-agency-id').val(agencyId);
+      // Log the agencyId to the console for debugging.
+      console.log('Selected Agency ID:', agencyId);
 
-          // Store the selected agency in Drupal's session.
-          $.ajax({
-            url: '/appointment/store-agency', // Define an endpoint.
-            type: 'POST',
-            data: { agency_id: agencyId },
-            success: function (response) {
-              alert("Success");
+      // Store the agency ID in the hidden input field.
+      $('input[name="agency_id"]').val(agencyId);
 
-              $('#agency-selection-form').submit(); // Submit the form.
-            },
-            error: function () {
-              console.error('Failed to store agency');
-            }
-          });
+      // Highlight the selected card (optional, for UI feedback).
+      $('.agency-card').removeClass('selected'); // Remove selection from all cards.
+      $(this).addClass('selected'); // Add selection to the clicked card.
+    });
 
-          alert(agencyId);
-          // Debugging: Log the agencyId.
-          console.log('Selected Agency ID:', agencyId);
-
-          // Set the selected agency ID in the hidden input field.
-          $('#edit-agency-id').val(agencyId);
-
-          // Debugging: Log the value of the hidden input field.
-          console.log('Hidden Input Value:', $('#edit-agency-id').val());
-
-          // Submit the form.
-          $('#agency-selection-form').submit();
-        });
-      });
-    }
-  };
-})(jQuery, Drupal);
+    // Optionally, highlight the card on hover for better interactivity.
+    $('.agency-card').hover(function () {
+      $(this).css('cursor', 'pointer');
+    }, function () {
+      $(this).css('cursor', 'default');
+    });
+  });
+})(jQuery);

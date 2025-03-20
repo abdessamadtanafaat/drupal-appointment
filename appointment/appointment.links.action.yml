@@ -1,0 +1,6 @@
+appointment.add_form:
+  title: 'Add appointment'
+  route_name: entity.appointment.add_form
+  appears_on:
+    - entity.appointment.collection
+

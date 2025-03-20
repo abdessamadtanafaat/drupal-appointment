@@ -1,8 +1,8 @@
 # Admin Permissions
-'administer appointments':
-  title: 'Administer appointment settings'
-  description: 'Allows users to configure appointment settings'
-  restrict access: true
+#'administer appointments':
+#  title: 'Administer appointment settings'
+#  description: 'Allows users to configure appointment settings'
+#  restrict access: true
 
 # Adviser Permissions
 'view own appointments':
@@ -28,3 +28,10 @@
 'delete any appointment':
   title: 'Delete any appointment'
   description: 'Allows users to delete any appointment'
+
+administer appointments:
+  title: 'Administer Appointments'
+  description: 'Access the appointment administration page.'
+
+
+

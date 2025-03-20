@@ -1,43 +1,68 @@
 <?php
 
-
 /**
  * Implements hook_schema().
  */
-function appointment_schema() {
+function appointment_booking_schema() {
   $schema['appointment'] = [
-    'description' => 'Stores appointment information.',
+    'description' => 'Stores appointment data.',
     'fields' => [
       'id' => [
-        'description' => 'Primary Key: Unique appointment ID.',
         'type' => 'serial',
         'unsigned' => TRUE,
         'not null' => TRUE,
+        'description' => 'Primary key for the appointment.',
       ],
-      'name' => [
-        'description' => 'The name of the appointment.',
+      'agency_id' => [
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'The agency ID.',
+      ],
+      'advisor_id' => [
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'The advisor ID.',
+      ],
+      'appointment_type' => [
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'The appointment type ID.',
+      ],
+      'date' => [
+        'type' => 'datetime',
+        'not null' => TRUE,
+        'description' => 'The date and time of the appointment.',
+      ],
+      'first_name' => [
         'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,
-        'default' => '',
+        'description' => 'The first name of the user.',
       ],
-      'appointment_date' => [
-        'description' => 'The date and time of the appointment.',
-        'type' => 'datetime',
-        'not null' => FALSE, // Allow NULL values to avoid SQL errors
-      ],
-      'status' => [
-        'description' => 'Appointment status (active/inactive).',
-        'type' => 'int',
-        'size' => 'tiny',
+      'last_name' => [
+        'type' => 'varchar',
+        'length' => 255,
         'not null' => TRUE,
-        'default' => 1, // 1 = Active, 0 = Inactive
+        'description' => 'The last name of the user.',
       ],
+      'email' => [
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'description' => 'The email of the user.',
+      ],
+      'phone' => [
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'description' => 'The phone number of the user.',
+      ],
+
     ],
     'primary key' => ['id'],
-    'indexes' => [
-      'appointment_date' => ['appointment_date'],
-    ],
   ];
 
   return $schema;

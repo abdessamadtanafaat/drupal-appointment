@@ -68,22 +68,12 @@ class AgencyEntity extends ConfigEntityBase implements AgencyEntityInterface {
    */
   public $email;
 
-  /**
-   * The auto-increment service.
-   *
-   * @var \Drupal\appointment\Service\AutoIncrementIdService
-   */
-  protected $autoIncrementIdService;
 
   /**
    * {@inheritdoc}
    */
   public function __construct(array $values = [], $id = NULL) {
     parent::__construct($values, $id);
-    // Use the auto-increment service to set the ID if not already set.
-    if (empty($this->id)) {
-      $this->id = \Drupal::service('appointment.auto_increment_id')->getNextId();
-    }
   }
 
   /**

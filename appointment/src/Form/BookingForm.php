@@ -18,7 +18,7 @@ class BookingForm extends FormBase {
    *
    * @var \Drupal\Core\TempStore\PrivateTempStore
    */
-  protected $tempStore;
+  protected $tempStoreFactory;
 
   /**
    * Constructs a new BookingForm.
@@ -27,7 +27,8 @@ class BookingForm extends FormBase {
    *   The tempstore factory.
    */
   public function __construct(PrivateTempStoreFactory $tempStoreFactory) {
-    $this->tempStore = $tempStoreFactory->get('appointment');
+    $this->tempStoreFactory = $tempStoreFactory;
+    $this->tempStore = $this->tempStoreFactory->get('appointment');
   }
 
   /**
@@ -52,6 +53,8 @@ class BookingForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
     // Get current step, defaulting to step 1.
+
+
     $step = $form_state->get('step') ?? 1;
 
     // Wrapper for AJAX updates.
@@ -97,7 +100,6 @@ class BookingForm extends FormBase {
     // Hidden input field to store the selected agency ID.
     $form['agency_id'] = [
       '#type' => 'hidden',
-      '#id' => 'edit-agency-id',
       '#attributes' => [
         'name' => 'agency_id',
       ],
@@ -128,7 +130,7 @@ class BookingForm extends FormBase {
       $form['agency_cards'][] = $agency_card;
     }
 
-    // Add a submit button (hidden, used for JavaScript submission).
+    // Add a submit button .
     $form['actions']['next'] = [
       '#type' => 'submit',
       '#value' => $this->t('Next'),
@@ -136,11 +138,23 @@ class BookingForm extends FormBase {
       '#ajax' => [
         'callback' => '::updateFormStep',
         'wrapper' => 'booking-form-wrapper',
-      ],
-      '#attributes' => [
-        'style' => 'display:none;', // Hide the button.
+        'effect' => 'fade',
       ],
     ];
+
+    // Store the selected agency ID in tempStore when the form is submitted.
+    $agency_id = $form_state->getValue('agency_id');
+
+    // Debugging: Log the agency_id value for troubleshooting.
+    if ($agency_id) {
+      \Drupal::logger('appointment')->debug('Agency ID selected: @agency_id', ['@agency_id' => $agency_id]);
+
+      // Store the agency ID in tempStore
+      $this->tempStore->set('agency_id', $agency_id);
+    } else {
+      \Drupal::logger('appointment')->warning('No agency ID selected.');
+    }
+
 
     return $form;
   }
@@ -150,23 +164,20 @@ class BookingForm extends FormBase {
    */
   public function step2($form, FormStateInterface $form_state) {
 
-    $tempStore = $this->tempStoreFactory->get('appointment');
-
-    $agencyId = $this->tempStore->get('agency_id');
-
-    // Debugging: Log the agency ID.
-    \Drupal::logger('appointment')->notice('Step 2 - Agency ID from tempstore: ' . $agencyId);
+    $values = $this->tempStore->get('values') ?? [];
 
 
-    if (!$agencyId) {
-      drupal_set_message($this->t('Please select an agency first.'), 'error');
-      return $this->step1($form, $form_state);
-    }
+    // Retrieve the agency ID from tempStore.
+    $agencyId = $form_state->getValue('agency_id');
+    $this->tempStore->set('agency_id', $agencyId);
+
+    \Drupal::logger('appointment')->notice('Stored Agency ID in tempstore: ' . $agencyId);
 
     // Add a hidden field to store the agency ID.
     $form['agency_id'] = [
       '#type' => 'hidden',
       '#value' => $agencyId,
+      '#default_value' => $values['agency_id'] ?? '',
     ];
 
     // Appointment type selection.
@@ -182,17 +193,29 @@ class BookingForm extends FormBase {
       '#type' => 'submit',
       '#value' => $this->t('Previous'),
       '#submit' => ['::prevStep'],
-      '#limit_validation_errors' => [], // Skip validation when going back.
+      '#limit_validation_errors' => [],
+      '#ajax' => [
+        'callback' => '::updateFormStep',
+        'wrapper' => 'booking-form-wrapper',
+        'effect' => 'fade',
+      ],
     ];
 
     $form['actions']['next'] = [
       '#type' => 'submit',
       '#value' => $this->t('Next'),
       '#submit' => ['::nextStep'],
+      '#ajax' => [
+        'callback' => '::updateFormStep',
+        'wrapper' => 'booking-form-wrapper',
+        'effect' => 'fade',
+
+      ],
     ];
 
     return $form;
   }
+
   /**
    * Updates the form dynamically using AJAX.
    */
@@ -200,13 +223,33 @@ class BookingForm extends FormBase {
     return $form;
   }
 
+
   /**
    * Moves to the next step.
    */
   public function nextStep(array &$form, FormStateInterface $form_state) {
-    $form_state->set('step', $form_state->get('step') + 1);
+    // Retrieve the current step from the form state.
+
+    $currentStep = $form_state->get('step') ?? 1;
+
+    $values = $this->tempStore->get('values') ?? [];
+    $values['agency_id'] = $form_state->getValue('agency_id');
+    $this->tempStore->set('values', $values);
+
+    // Log the current step for debugging.
+    \Drupal::logger('appointment')->notice('Current Step: ' . $currentStep);
+
+    // Move to the next step.
+    $nextStep = $currentStep + 1;
+    $form_state->set('step', $nextStep);
+
+    // Log the next step after updating for debugging.
+    \Drupal::logger('appointment')->notice('Next Step: ' . $nextStep);
+
+    // Set the form to be rebuilt after updating the step.
     $form_state->setRebuild(TRUE);
   }
+
 
   /**
    * Moves to the previous step.
@@ -219,26 +262,40 @@ class BookingForm extends FormBase {
   /**
    * {@inheritdoc}
    */
+  /**
+   * {@inheritdoc}
+   */
   public function validateForm(array &$form, FormStateInterface $form_state) {
     parent::validateForm($form, $form_state);
 
+    // Get the current step.
+    $step = $form_state->get('step') ?? 1;
+
+    // Validate Step 1: Ensure a card is selected.
+    if ($step === 1) {
+      $agency_id = $form_state->getValue('agency_id');
+
+      // Check if agency_id is empty.
+      if (empty($agency_id)) {
+        // Set an error message if no card is selected.
+        $form_state->setErrorByName('agency_id', $this->t('Please select an agency to proceed.'));
+      // Rebuild the form to ensure it remains interactive.
+      $form_state->setRebuild(TRUE);
+      }
+
+    }
   }
 
   public function submitForm(array &$form, FormStateInterface $form_state) {
     // Retrieve the selected agency ID from the form submission.
     $agencyId = $form_state->getValue('agency_id');
 
-    // Debugging: Log the selected agency ID.
-    \Drupal::logger('appointment')->notice('Selected Agency ID: ' . $agencyId);
-
     // Store the agency ID in the tempstore.
-    $tempStore = $this->tempStoreFactory->get('appointment');
-    $tempStore->set('agency_id', $agencyId);
+    $this->tempStore->set('agency_id', $agencyId);
 
     // Move to the next step.
     $form_state->set('step', 2);
     $form_state->setRebuild(TRUE);
-
   }
 
   /**
