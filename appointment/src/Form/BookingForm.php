@@ -97,6 +97,11 @@ class BookingForm extends FormBase {
     $form['#attached']['library'][] = 'appointment/appointment_styles';
     $form['#attached']['library'][] = 'appointment/appointment_scripts';
 
+    // Add the introductory text.
+    $form['intro_text'] = [
+      '#markup' => '<div class="intro-text"><h3>' . $this->t('Choose an agency') . '</h3></div>',
+    ];
+
     // Hidden input field to store the selected agency ID.
     $form['agency_id'] = [
       '#type' => 'hidden',
@@ -123,14 +128,10 @@ class BookingForm extends FormBase {
     $form['agency_cards'] = [
       '#type' => 'container',
       '#attributes' => ['class' => ['agency-cards-container']],
+      'cards' => $agency_cards,
     ];
 
-    // Add each card to the container.
-    foreach ($agency_cards as $agency_card) {
-      $form['agency_cards'][] = $agency_card;
-    }
-
-    // Add a submit button .
+    // Add a submit button.
     $form['actions']['next'] = [
       '#type' => 'submit',
       '#value' => $this->t('Next'),
@@ -142,30 +143,28 @@ class BookingForm extends FormBase {
       ],
     ];
 
-    // Store the selected agency ID in tempStore when the form is submitted.
-    $agency_id = $form_state->getValue('agency_id');
-
-    // Debugging: Log the agency_id value for troubleshooting.
-    if ($agency_id) {
-      \Drupal::logger('appointment')->debug('Agency ID selected: @agency_id', ['@agency_id' => $agency_id]);
-
-      // Store the agency ID in tempStore
-      $this->tempStore->set('agency_id', $agency_id);
-    } else {
-      \Drupal::logger('appointment')->warning('No agency ID selected.');
-    }
-
-
     return $form;
   }
-
   /**
    * Step 2: Select Appointment Type.
    */
   public function step2($form, FormStateInterface $form_state) {
 
-    $values = $this->tempStore->get('values') ?? [];
+    // Enable AJAX for the form.
+    $form['#prefix'] = '<div id="booking-form-wrapper">';
+    $form['#suffix'] = '</div>';
 
+    // Attach the library.
+    $form['#attached']['library'][] = 'appointment/appointment_types_styles';
+    $form['#attached']['library'][] = 'appointment/appointment_types_scripts';
+
+    // Add the introductory text.
+    $form['intro_text'] = [
+      '#markup' => '<div class="intro-text"><h3>' . $this->t('Start now, book your appointment') . '</h3></div>',
+    ];
+
+
+    $values = $this->tempStore->get('values') ?? [];
 
     // Retrieve the agency ID from tempStore.
     $agencyId = $form_state->getValue('agency_id');
@@ -180,12 +179,124 @@ class BookingForm extends FormBase {
       '#default_value' => $values['agency_id'] ?? '',
     ];
 
-    // Appointment type selection.
-    $form['appointment_type'] = [
-      '#type' => 'select',
-      '#title' => $this->t('Select Appointment Type'),
-      '#options' => $this->getAppointmentTypes(),
-      '#required' => TRUE, // Ensure this field is required.
+    // Retrieve the list of appointment types.
+    $appointment_types = $this->getAppointmentTypes();
+
+    // Loop through the appointment types and prepare them for rendering as cards.
+    $appointment_type_cards = [];
+    foreach ($appointment_types as $id => $label) {
+      $appointment_type_cards[] = [
+        '#theme' => 'appointment_type_card',
+        '#appointment_type' => $label,
+        '#appointment_type_id' => $id,
+      ];
+    }
+
+    // Add the appointment type cards to the form render array.
+    $form['appointment_types'] = [
+      '#type' => 'container',
+      '#attributes' => ['class' => ['appointment_types-cards-container']],
+      'cards' => $appointment_type_cards,
+    ];
+
+    // Add a hidden field to store the selected appointment type ID.
+    $form['appointment_type_id'] = [
+      '#type' => 'hidden',
+      '#attributes' => [
+        'name' => 'appointment_type_id',
+      ],
+    ];
+
+    // Navigation buttons.
+    $form['actions']['prev'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Previous'),
+      '#submit' => ['::prevStep'],
+      '#limit_validation_errors' => [],
+      '#ajax' => [
+        'callback' => '::updateFormStep',
+        'wrapper' => 'booking-form-wrapper',
+        'effect' => 'fade',
+      ],
+    ];
+
+    $form['actions']['next'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Next'),
+      '#submit' => ['::nextStep'],
+      '#ajax' => [
+        'callback' => '::updateFormStep',
+        'wrapper' => 'booking-form-wrapper',
+        'effect' => 'fade',
+
+      ],
+    ];
+
+    return $form;
+  }
+
+
+  /**
+   * Step 3: Select Advisor.
+   */
+  public function step3($form, FormStateInterface $form_state) {
+
+    // Enable AJAX for the form.
+    $form['#prefix'] = '<div id="booking-form-wrapper">';
+    $form['#suffix'] = '</div>';
+
+    // Attach the library.
+    $form['#attached']['library'][] = 'appointment/advisor_selection_styles';
+    $form['#attached']['library'][] = 'appointment/advisor_selection_scripts';
+
+    // Add the introductory text.
+    $form['intro_text'] = [
+      '#markup' => '<div class="intro-text"><h3>' . $this->t('Select your advisor') . '</h3></div>',
+    ];
+
+    $values = $this->tempStore->get('values') ?? [];
+
+    // Retrieve the agency ID from tempStore.
+    $agencyId = $form_state->getValue('agency_id');
+    $this->tempStore->set('agency_id', $agencyId);
+
+    \Drupal::logger('appointment')->notice('Stored Agency ID in tempstore: ' . $agencyId);
+
+    // Add a hidden field to store the agency ID.
+    $form['agency_id'] = [
+      '#type' => 'hidden',
+      '#value' => $agencyId,
+      '#default_value' => $values['agency_id'] ?? '',
+    ];
+
+    // Retrieve the list of advisors.
+    $advisors= $this->getAdvisors();
+
+    \Drupal::logger('advisors')->notice('Advisors Values: ' . print_r($advisors, TRUE));
+
+    // Loop through the appointment types and prepare them for rendering as cards.
+    $advisors_cards = [];
+    foreach ($advisors as $id => $user) {
+      $advisors_cards[] = [
+        '#theme' => 'advisor_card',
+        '#advisor' => $user,
+        '#advisor_id' => $id,
+      ];
+    }
+
+    // Add the appointment type cards to the form render array.
+    $form['advisors'] = [
+      '#type' => 'container',
+      '#attributes' => ['class' => ['advisors-cards-container']],
+      'cards' => $advisors_cards,
+    ];
+
+    // Add a hidden field to store the selected appointment type ID.
+    $form['advisor_id'] = [
+      '#type' => 'hidden',
+      '#attributes' => [
+        'name' => 'advisor_id',
+      ],
     ];
 
     // Navigation buttons.
@@ -234,7 +345,11 @@ class BookingForm extends FormBase {
 
     $values = $this->tempStore->get('values') ?? [];
     $values['agency_id'] = $form_state->getValue('agency_id');
+    $values['appointment_type_id'] = $form_state->getValue('appointment_type_id');
     $this->tempStore->set('values', $values);
+
+    // Log the values for debugging.
+    \Drupal::logger('appointment')->notice('TempStore Values: ' . print_r($values, TRUE));
 
     // Log the current step for debugging.
     \Drupal::logger('appointment')->notice('Current Step: ' . $currentStep);
@@ -283,7 +398,22 @@ class BookingForm extends FormBase {
       $form_state->setRebuild(TRUE);
       }
 
+
+
     }
+    // Validate Step 2: Ensure a appointment type is selected.
+    if ($step === 2) {
+      $appointment_type_id = $form_state->getValue('appointment_type_id');
+
+      // Check if agency_id is empty.
+      if (empty($appointment_type_id)) {
+        // Set an error message if no card is selected.
+        $form_state->setErrorByName('appointment_type_id', $this->t('Please select an appointment type to proceed.'));
+        // Rebuild the form to ensure it remains interactive.
+        $form_state->setRebuild(TRUE);
+      }
+    }
+
   }
 
   public function submitForm(array &$form, FormStateInterface $form_state) {
@@ -306,7 +436,7 @@ class BookingForm extends FormBase {
    */
   protected function getAgencies(): array {
     // Query for agency entities.
-    $agency_storage = \Drupal::entityTypeManager()->getStorage('agency');
+    $agency_storage = \Drupal::entityTypeManager()->getStorage('appointment_agency');
     return $agency_storage->loadMultiple();
   }
 
@@ -332,5 +462,39 @@ class BookingForm extends FormBase {
     return $appointmentTypes;
   }
 
+  /**
+   * Retrieves the list of advisors.
+   *
+   * @return array
+   *   An associative array of advisor IDs and names.
+   */
+  protected function getAdvisors(): array {
+    $advisors = [];
+
+    // Load the user storage service.
+    $user_storage = \Drupal::entityTypeManager()->getStorage('user');
+
+    // Query users with a specific role (e.g., 'advisor').
+    $query = $user_storage->getQuery()
+      ->condition('status', 1) // Only active users.
+      ->condition('roles', 'advisor') // Replace 'advisor' with the correct role machine name.
+      ->sort('name', 'ASC') // Sort by name.
+      ->accessCheck(TRUE); // Explicitly enable access checking.
+
+    // Execute the query and get the user IDs.
+    $uids = $query->execute();
+
+    if (!empty($uids)) {
+      // Load the user entities.
+      $users = $user_storage->loadMultiple($uids);
+
+      // Build the list of advisors.
+      foreach ($users as $user) {
+        $advisors[$user->id()] = $user; // Store the full user object.
+      }
+    }
+
+    return $advisors;
+  }
 
 }

@@ -16,13 +16,13 @@ final class AppointmentListBuilder extends EntityListBuilder {
    * {@inheritdoc}
    */
   public function buildHeader(): array {
-    $header['id'] = $this->t('ID');
-    $header['label'] = $this->t('Label');
-    $header['status'] = $this->t('Status');
-    $header['uid'] = $this->t('Author');
-    $header['created'] = $this->t('Created');
-    $header['changed'] = $this->t('Updated');
-    return $header + parent::buildHeader();
+    $header['description'] = $this->t('Description');
+    $header['date'] = $this->t('Date');
+    $header['agency'] = $this->t('Agency');
+    $header['advisor'] = $this->t('Advisor');
+    $header['appointment_type'] = $this->t('Appointment Type');
+    $header['operations'] = $this->t('Operations');
+    return $header;
   }
 
   /**
@@ -30,17 +30,28 @@ final class AppointmentListBuilder extends EntityListBuilder {
    */
   public function buildRow(EntityInterface $entity): array {
     /** @var \Drupal\appointment\AppointmentInterface $entity */
-    $row['id'] = $entity->id();
-    $row['label'] = $entity->toLink();
-    $row['status'] = $entity->get('status')->value ? $this->t('Enabled') : $this->t('Disabled');
-    $username_options = [
-      'label' => 'hidden',
-      'settings' => ['link' => $entity->get('uid')->entity->isAuthenticated()],
-    ];
-    $row['uid']['data'] = $entity->get('uid')->view($username_options);
-    $row['created']['data'] = $entity->get('created')->view(['label' => 'hidden']);
-    $row['changed']['data'] = $entity->get('changed')->view(['label' => 'hidden']);
-    return $row + parent::buildRow($entity);
-  }
 
+    // Description.
+    $row['description'] = $entity->get('description')->value;
+
+    // Date.
+    $row['date'] = $entity->get('appointment_date')->value;
+
+    // Agency (name).
+    $agency = $entity->get('agency_id')->entity;
+    $row['agency'] = $agency ? $agency->label() : $this->t('N/A');
+
+    // Advisor.
+    $advisor = $entity->get('advisor_id')->entity;
+    $row['advisor'] = $advisor ? $advisor->label() : $this->t('N/A');
+
+    // Appointment Type.
+    $appointment_type = $entity->get('appointment_type')->entity;
+    $row['appointment_type'] = $appointment_type ? $appointment_type->label() : $this->t('N/A');
+
+    // Operations (edit/delete links).
+    $row['operations']['data'] = $this->buildOperations($entity);
+
+    return $row;
+  }
 }

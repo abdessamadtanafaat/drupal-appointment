@@ -16,3 +16,32 @@ appointment_scripts:
     - core/drupal
     - core/once
 
+appointment_types_styles:
+  version: 1.x
+  css:
+    theme:
+      css/appointment-types.css: {}
+
+appointment_types_scripts:
+  version: 1.x
+  js:
+    js/appointment-types-selection.js: {}
+  dependencies:
+    - core/jquery
+
+advisor_selection_scripts:
+    version: 1.x
+    js:
+      js/advisor-selection.js: { }
+    dependencies:
+      - core/jquery
+      - appointment/appointment_styles
+      - core/drupal
+      - core/once
+advisor_selection_styles:
+    version: 1.x
+    css:
+      theme:
+        css/advisor-style.css: { }
+
+

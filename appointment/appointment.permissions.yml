@@ -33,8 +33,13 @@ administer appointments:
   title: 'Administer Appointments'
   description: 'Access the appointment administration page.'
 
+view appointment entities:
+  title: 'View appointment entities'
+  description: 'Allows users to view appointment entities.'
 
-
+edit own appointment entities:
+  title: 'Edit own appointment entities'
+  description: 'Allows users to edit their own appointment entities.'
 
 administer appointment_agency:
   title: 'Administer agencies'

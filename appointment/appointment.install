@@ -4,7 +4,89 @@
  * Implements hook_install().
  */
 function appointment_install() {
-  // Check if the "Appointment Types" vocabulary already exists.
+
+  // Create the 'Appointment Types' vocabulary.
+  _appointment_create_appointment_types_vocabulary();
+
+  // Create example terms for the 'Appointment Types' vocabulary.
+  _appointment_create_appointment_types_terms();
+
+  // Create the 'Advisor' role.
+  _appointment_create_advisor_role();
+
+  // Assign the 'Advisor' role to specific users.
+  _appointment_assign_advisor_role();
+
+  // Create the 'Advisor' user.
+  _appointment_create_advisor_user();
+
+}
+
+/**
+ * Creates the 'Advisor' role.
+ */
+function _appointment_create_advisor_role() {
+  // Check if the role already exists.
+  $role = \Drupal\user\Entity\Role::load('advisor');
+
+  if (!$role) {
+    // Create the 'Advisor' role.
+    $role = \Drupal\user\Entity\Role::create([
+      'id' => 'advisor',
+      'label' => 'Advisor',
+    ]);
+    $role->save();
+
+    // Assign permissions to the 'Advisor' role.
+    $permissions = [
+      'access content',
+      // Add only valid permissions here.
+    ];
+    user_role_grant_permissions('advisor', $permissions);
+
+    // Log the creation of the role.
+    \Drupal::logger('appointment')->notice('Created role: Advisor');
+  }
+}
+
+/**
+ * Assigns the 'Advisor' role to specific users.
+ */
+function _appointment_assign_advisor_role() {
+  // Load the user storage service.
+  $user_storage = \Drupal::entityTypeManager()->getStorage('user');
+
+  // Query users with a specific email domain (e.g., '@example.com').
+  $query = $user_storage->getQuery()
+//    ->condition('mail', '%@void.com', 'LIKE') // Replace with your domain.
+    ->condition('status', 1) // Only active users.
+    ->accessCheck(TRUE); // Explicitly enable access checking.
+
+  // Execute the query and get the user IDs.
+  $uids = $query->execute();
+
+  if (!empty($uids)) {
+    // Load the user entities.
+    $users = $user_storage->loadMultiple($uids);
+
+    // Assign the 'Advisor' role to each user.
+    foreach ($users as $user) {
+      if (!$user->hasRole('advisor')) {
+        $user->addRole('advisor');
+        $user->save();
+      }
+    }
+
+    // Log the assignment of the role.
+    \Drupal::logger('appointment')
+      ->notice('Assigned Advisor role to users: @uids', ['@uids' => implode(', ', $uids)]);
+  }
+}
+/**
+ * Creates the 'Appointment Types' vocabulary.
+ */
+function _appointment_create_appointment_types_vocabulary() {
+  // Check if the vocabulary already exists.
   $vocabulary = \Drupal\taxonomy\Entity\Vocabulary::load('appointment_types');
 
   if (!$vocabulary) {
@@ -22,7 +104,12 @@ function appointment_install() {
     // Log that the vocabulary already exists.
     \Drupal::logger('appointment')->notice('Taxonomy vocabulary "Appointment Types" already exists.');
   }
+}
 
+/**
+ * Creates example terms for the 'Appointment Types' vocabulary.
+ */
+function _appointment_create_appointment_types_terms() {
   // Define example terms for the vocabulary.
   $terms = [
     ['name' => 'Consultation', 'vid' => 'appointment_types'],
@@ -55,147 +142,25 @@ function appointment_install() {
   }
 }
 
-//
-///**
-// * Implements hook_schema().
-// */
-//function appointment_booking_schema() {
-//  $schema['appointment'] = [
-//    'description' => 'Stores appointment data.',
-//    'fields' => [
-//      'id' => [
-//        'type' => 'serial',
-//        'unsigned' => TRUE,
-//        'not null' => TRUE,
-//        'description' => 'Primary key for the appointment.',
-//      ],
-//      'agency_id' => [
-//        'type' => 'int',
-//        'unsigned' => TRUE,
-//        'not null' => TRUE,
-//        'description' => 'The agency ID.',
-//      ],
-//      'advisor_id' => [
-//        'type' => 'int',
-//        'unsigned' => TRUE,
-//        'not null' => TRUE,
-//        'description' => 'The advisor ID.',
-//      ],
-//      'appointment_type' => [
-//        'type' => 'int',
-//        'unsigned' => TRUE,
-//        'not null' => TRUE,
-//        'description' => 'The appointment type ID.',
-//      ],
-//      'date' => [
-//        'type' => 'datetime',
-//        'not null' => TRUE,
-//        'description' => 'The date and time of the appointment.',
-//      ],
-//      'first_name' => [
-//        'type' => 'varchar',
-//        'length' => 255,
-//        'not null' => TRUE,
-//        'description' => 'The first name of the user.',
-//      ],
-//      'last_name' => [
-//        'type' => 'varchar',
-//        'length' => 255,
-//        'not null' => TRUE,
-//        'description' => 'The last name of the user.',
-//      ],
-//      'email' => [
-//        'type' => 'varchar',
-//        'length' => 255,
-//        'not null' => TRUE,
-//        'description' => 'The email of the user.',
-//      ],
-//      'phone' => [
-//        'type' => 'varchar',
-//        'length' => 255,
-//        'not null' => TRUE,
-//        'description' => 'The phone number of the user.',
-//      ],
-//
-//    ],
-//    'primary key' => ['id'],
-//  ];
-//
-//  return $schema;
-//}
-//
-//
-///**
-// * Implements hook_install().
-// */
-//function booking_system_install() {
-//  // Create example agencies.
-//  $agencies = [
-//    [
-//      'name' => 'Agency A',
-//      'description' => 'This is Agency A.',
-//      'advisers' => [2, 3], // User IDs of advisers.
-//    ],
-//    [
-//      'name' => 'Agency B',
-//      'description' => 'This is Agency B.',
-//      'advisers' => [4, 5], // User IDs of advisers.
-//    ],
-//  ];
-//
-//  foreach ($agencies as $agency_data) {
-//    $agency = \Drupal::entityTypeManager()
-//      ->getStorage('agency')
-//      ->create($agency_data);
-//    $agency->save();
-//  }
-//
-//  // Create example appointments.
-//  $appointments = [
-//    [
-//      'agency_id' => 1, // Agency ID.
-//      'appointment_type' => 'consultation', // Taxonomy term name or ID.
-//      'advisor_id' => 2, // User ID of the adviser.
-//      'appointment_date' => '2023-10-15 10:00:00',
-//      'first_name' => 'John',
-//      'last_name' => 'Doe',
-//      'email' => 'john.doe@example.com',
-//      'phone' => '123-456-7890',
-//    ],
-//    [
-//      'agency_id' => 2, // Agency ID.
-//      'appointment_type' => 'meeting', // Taxonomy term name or ID.
-//      'advisor_id' => 4, // User ID of the adviser.
-//      'appointment_date' => '2023-10-16 14:00:00',
-//      'first_name' => 'Jane',
-//      'last_name' => 'Smith',
-//      'email' => 'jane.smith@example.com',
-//      'phone' => '987-654-3210',
-//    ],
-//  ];
-//
-//  foreach ($appointments as $appointment_data) {
-//    $appointment = \Drupal::entityTypeManager()
-//      ->getStorage('appointment')
-//      ->create($appointment_data);
-//    $appointment->save();
-//  }
-//
-//  /**
-//   * Implements hook_uninstall().
-//   */
-//  function appointment_uninstall() {
-//    // Clean up entities when the module is uninstalled.
-//    $agency_ids = \Drupal::entityQuery('agency')->execute();
-//    $appointment_ids = \Drupal::entityQuery('appointment')->execute();
-//
-//    $storage = \Drupal::entityTypeManager()->getStorage('agency');
-//    $entities = $storage->loadMultiple($agency_ids);
-//    $storage->delete($entities);
-//
-//    $storage = \Drupal::entityTypeManager()->getStorage('appointment');
-//    $entities = $storage->loadMultiple($appointment_ids);
-//    $storage->delete($entities);
-//  }
-//}
-//
+/**
+ * Creates the 'Advisor' user.
+ */
+function _appointment_create_advisor_user() {
+  // Create the 'Advisor' user.
+  $user = \Drupal\user\Entity\User::create();
+
+  // Set the user's properties.
+  $user->setUsername('advisor_void'); // Username for the advisor.
+  $user->setPassword('void2015'); // Set a secure password.
+  $user->setEmail('void@gmail.com'); // Email address for the advisor.
+  $user->activate(); // Activate the user.
+
+  // Assign the 'Advisor' role to the user.
+  $user->addRole('advisor');
+
+  // Save the user.
+  $user->save();
+
+  // Log the creation of the user.
+  \Drupal::logger('appointment')->notice('Created Advisor user with ID: @uid', ['@uid' => $user->id()]);
+}
