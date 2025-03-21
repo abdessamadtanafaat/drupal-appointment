@@ -47,4 +47,14 @@ advisor_selection_styles:
       theme:
         css/advisor-style.css: { }
 
-
+calendar_scripts:
+  version: 1.0
+  js:
+    //cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js: { type: external, minified: true }
+    //cdn.jsdelivr.net/npm/@fullcalendar/interaction@6.1.15/index.global.min.js: { type: external, minified: true }
+    //cdn.jsdelivr.net/npm/@fullcalendar/daygrid@6.1.15/index.global.min.js: { type: external, minified: true }
+    //cdn.jsdelivr.net/npm/@fullcalendar/timegrid@6.1.15/index.global.min.js: { type: external, minified: true }
+    js/calendar.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal

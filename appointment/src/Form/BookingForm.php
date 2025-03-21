@@ -327,6 +327,62 @@ class BookingForm extends FormBase {
     return $form;
   }
 
+
+  public function step4($form, FormStateInterface $form_state) {
+    // Enable AJAX for the form.
+    $form['#prefix'] = '<div id="booking-form-wrapper">';
+    $form['#suffix'] = '</div>';
+
+    // Attach the FullCalendar library.
+    $form['#attached']['library'][] = 'appointment/calendar_scripts';
+//    $form['#attached']['library'][] = 'appointment/calendar_styles';
+
+    // Add the introductory text.
+    $form['intro_text'] = [
+      '#markup' => '<div class="intro-text"><h3>' . $this->t('Select a date and time for your appointment') . '</h3></div>',
+    ];
+
+    // Add a container for the calendar.
+    $form['calendar'] = [
+      '#markup' => '<div id="calendar"></div>',
+    ];
+
+    // Hidden field to store the selected date and time.
+    $form['selected_datetime'] = [
+      '#type' => 'hidden',
+      '#attributes' => [
+        'id' => 'edit-selected-datetime', // Add an ID for JavaScript targeting
+        'name' => 'selected_datetime',
+      ],
+    ];
+
+    // Navigation buttons.
+    $form['actions']['prev'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Previous'),
+      '#submit' => ['::prevStep'],
+      '#limit_validation_errors' => [],
+      '#ajax' => [
+        'callback' => '::updateFormStep',
+        'wrapper' => 'booking-form-wrapper',
+        'effect' => 'fade',
+      ],
+    ];
+
+    $form['actions']['next'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Next'),
+      '#submit' => ['::nextStep'],
+      '#ajax' => [
+        'callback' => '::updateFormStep',
+        'wrapper' => 'booking-form-wrapper',
+        'effect' => 'fade',
+      ],
+    ];
+
+    return $form;
+  }
+
   /**
    * Updates the form dynamically using AJAX.
    */
@@ -377,9 +433,6 @@ class BookingForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  /**
-   * {@inheritdoc}
-   */
   public function validateForm(array &$form, FormStateInterface $form_state) {
     parent::validateForm($form, $form_state);
 
@@ -426,6 +479,8 @@ class BookingForm extends FormBase {
     // Move to the next step.
     $form_state->set('step', 2);
     $form_state->setRebuild(TRUE);
+
+    // save in the database !!
   }
 
   /**
