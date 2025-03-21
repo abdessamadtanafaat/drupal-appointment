@@ -109,3 +109,13 @@ appointment.availability:
     _controller: '\Drupal\appointment\Controller\AvailabilityController::getAvailability'
   requirements:
     _permission: 'access content'
+
+appointment.save_selection:
+  path: '/appointment/save-selection'
+  defaults:
+    _controller: '\Drupal\appointment\Controller\AppointmentController::saveSelection'
+    _title: 'Save Selection'
+  requirements:
+    _permission: 'access content'
+#  options:
+#    _auth: [basic_auth]

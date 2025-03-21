@@ -90,6 +90,7 @@ class AppointmentManagerService {
     return $query->fetchCol();
   }
 
+
   /**
    * Get events for FullCalendar.
    */
@@ -105,8 +106,10 @@ class AppointmentManagerService {
     // Add existing appointments as "unavailable".
     foreach ($existing_appointments as $appointment) {
       $events[] = [
+        'id' => 'unavailable_' . uniqid(), // Unique ID for each event.
         'title' => 'Unavailable',
-        'start' => $appointment,
+        'start' => $this->formatDateTime($appointment), // Convert to ISO 8601 format.
+        'end' => $this->formatDateTime($appointment, '+1 hour'), // Assume 1-hour appointments.
         'color' => '#ff0000', // Red color for unavailable times.
       ];
     }
@@ -115,10 +118,18 @@ class AppointmentManagerService {
     if (!empty($working_hours)) {
       foreach ($working_hours as $day => $slots) {
         foreach ($slots as $slot) {
+          $start_time = $slot['start']; // e.g., "15:00"
+          $end_time = $slot['end']; // e.g., "16:00"
+
+          // Generate the start and end dates for the current week.
+          $start_date = $this->getDateForDayOfWeek($day, $start_time);
+          $end_date = $this->getDateForDayOfWeek($day, $end_time);
+
           $events[] = [
+            'id' => 'available_' . uniqid(), // Unique ID for each event.
             'title' => 'Available',
-            'start' => $this->getDayOfWeek($day) . 'T' . $slot['start'],
-            'end' => $this->getDayOfWeek($day) . 'T' . $slot['end'],
+            'start' => $start_date->format('Y-m-d\TH:i:s\Z'), // ISO 8601 format.
+            'end' => $end_date->format('Y-m-d\TH:i:s\Z'), // ISO 8601 format.
             'color' => '#00ff00', // Green color for available times.
           ];
         }
@@ -132,27 +143,34 @@ class AppointmentManagerService {
   }
 
   /**
-   * Helper function to map day number to FullCalendar day of the week.
+   * Helper function to get the date for a specific day of the week and time.
    */
-  private function getDayOfWeek($day) {
-    $days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    return $days[$day] ?? 'Sunday';
+  private function getDateForDayOfWeek($day, $time) {
+    // Get the current date.
+    $date = new \DateTime();
+
+    // Calculate the difference between the current day and the target day.
+    $current_day = $date->format('w'); // 0 (Sunday) to 6 (Saturday).
+    $target_day = $day; // 0 (Sunday) to 6 (Saturday).
+
+    // Adjust the date to the target day of the week.
+    $date->modify('+' . ($target_day - $current_day) . ' days');
+
+    // Set the time.
+    $date->setTime(substr($time, 0, 2), substr($time, 3, 2)); // e.g., "15:00" -> 15:00.
+
+    return $date;
   }
 
   /**
-   * Helper function to convert time values (e.g., "1500") to a valid date-time format.
+   * Helper function to format date and time to ISO 8601 format.
    */
-  private function formatTimeToDatetime($time) {
-    if (empty($time)) {
-      return null;
+  private function formatDateTime($date, $modify = '') {
+    $date = new \DateTime($date);
+    if ($modify) {
+      $date->modify($modify);
     }
-
-    // Convert time value (e.g., "1500") to "HH:MM" format.
-    $time_str = substr($time, 0, 2) . ':' . substr($time, 2, 2);
-
-    // Use the current date for demonstration purposes.
-    // Replace this with the actual date if needed.
-    $date = date('Y-m-d'); // Today's date.
-    return $date . 'T' . $time_str . ':00'; // ISO 8601 format.
+    return $date->format('Y-m-d\TH:i:s\Z');
   }
+
 }

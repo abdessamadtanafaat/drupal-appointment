@@ -1,157 +1,84 @@
 <?php
-//
-//namespace Drupal\appointment\Controller;
-//
-//use Drupal\appointment\Entity\AgencyEntity;
-//use Drupal\appointment\Form\AgencySelectionForm;
-//use Drupal\Core\Controller\ControllerBase;
-//use Drupal\Core\TempStore\PrivateTempStoreFactory;
-//use Drupal\node\Entity\Node;
-//use http\Client\Response;
-//use Symfony\Component\DependencyInjection\ContainerInterface;
-//use Drupal\appointment\Entity\Appointment;
-//use Symfony\Component\HttpFoundation\JsonResponse;
-//
-//// Make sure your custom entity namespace is correct
-//
-//class AppointmentController extends ControllerBase {
-//
-//
-//  /**
-//   * The tempstore service.
-//   *
-//   * @var \Drupal\Core\TempStore\PrivateTempStoreInterface
-//   */
-//  protected $tempStore;
-//
-//  /**
-//   * Constructs a new AgencyController object.
-//   *
-//   * @param \Drupal\Core\TempStore\PrivateTempStoreFactory $temp_store
-//   *   The private tempstore factory service.
-//   */
-//  public function __construct(PrivateTempStoreFactory $temp_store) {
-//    $this->tempStore = $temp_store->get('appointment');
-//  }
-//
-//  /**
-//   * List function for appointments.
-//   */
-//  public function list() {
-//    // You can add logic here to retrieve and render the appointments list.
-//    return [
-//      '#markup' => $this->t('This is where the list of appointments will appear.'),
-//    ];
-//  }
-//
-//  /**
-//   * Displays the agency selection form.
-//   */
-//  public function chooseAgency() {
-//    // Get the agency ID from the AJAX request
-//    $agency_id = \Drupal::request()->request->get('agency_id');
-//
-//    // Store the agency ID in the tempstore
-//    $this->tempStore->set('selected_agency', $agency_id);
-//
-//    // Return a JSON response indicating success
-//    return new JsonResponse(['status' => 'success']);
-//  }
-//  /**
-//   * Handle the AJAX request to store the selected agency.
-//   */
-//  public function selectAgency() {
-//    // Get the agency ID from the AJAX request
-//    $agency_id = \Drupal::request()->request->get('agency_id');
-//
-//    // Store the agency ID in the tempstore
-//    $this->tempStore->set('selected_agency', $agency_id);
-//
-//    // Optionally, send a response if needed
-//    return new \Drupal\Core\Ajax\AjaxResponse();
-//  }
-//
-//  /**
-//   * Create a new appointment.
-//   */
-//  public function createAppointment() {
-//    // Create a new appointment entity
-//    $storage = \Drupal::entityTypeManager()->getStorage('appointment');
-//
-//    $appointment = $storage->create([
-//      'uuid' => \Drupal::service('uuid')->generate(),
-//      'name' => ('Test Appointment'), // Provide name for the appointment
-//      'appointment_date' => strtotime('2024-08-20'), // Appointment date as a Unix timestamp
-//      'status' => 'scheduled', // Appointment status (could be scheduled, completed, etc.)
-//      'user_id' => 1, // User ID for the appointment (you can change it as needed)
-//    ]);
-//
-//    // Save the appointment entity
-//    $appointment->save();
-//
-//    // Return a success message
-//    return [
-//      '#markup' => $this->t('Appointment created successfully.'),
-//    ];
-//  }
-//
-//  /**
-//   * Lists all appointments for admin.
-//   */
-//  public function adminList() {
-//    $query = \Drupal::entityQuery('node')
-//      ->condition('type', 'appointment')
-//      ->execute();
-//
-//    $appointments = Node::loadMultiple($query);
-//
-//    $output = "<h2>All Appointments</h2><ul>";
-//    foreach ($appointments as $appointment) {
-//      $output .= "<li>" . $appointment->label() . "</li>";
+
+namespace Drupal\appointment\Controller;
+
+use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\TempStore\PrivateTempStoreFactory;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+
+class AppointmentController extends ControllerBase {
+
+  /**
+   * The tempstore service.
+   *
+   * @var \Drupal\Core\TempStore\PrivateTempStore
+   */
+  protected $tempStore;
+
+  /**
+   * Constructs a new AppointmentController.
+   *
+   * @param \Drupal\Core\TempStore\PrivateTempStoreFactory $tempStoreFactory
+   *   The tempstore factory.
+   */
+  public function __construct(PrivateTempStoreFactory $tempStoreFactory) {
+    $this->tempStore = $tempStoreFactory->get('appointment');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('tempstore.private')
+    );
+  }
+
+  /**
+   * Saves the selected time slot to the tempstore.
+   */
+  public function saveSelection(Request $request) {
+    // Log the incoming request data for debugging.
+    \Drupal::logger('appointment')->debug('Incoming request data: ' . $request->getContent());
+
+    // Decode the JSON payload.
+    $data = json_decode($request->getContent(), TRUE);
+
+    // Log the decoded data for debugging.
+    \Drupal::logger('appointment')->debug('Decoded data: ' . print_r($data, TRUE));
+
+    // Check if the decoded data is valid.
+    if (empty($data) || !is_array($data)) {
+      \Drupal::logger('appointment')->error('Invalid or empty JSON payload received.');
+      return new JsonResponse(['status' => 'error', 'message' => 'Invalid or empty JSON payload.'], 400);
+    }
+
+//    // Validate the required fields.
+//    if (empty($data['advisor_id']) || empty($data['start']) || empty($data['end']) || empty($data['title'])) {
+//      \Drupal::logger('appointment')->error('Invalid data received: Missing required fields.');
+//      return new JsonResponse(['status' => 'error', 'message' => 'Invalid data: Missing required fields.'], 400);
 //    }
-//    $output .= "</ul>";
-//
-//    return new Response($output);
-//  }
-//
-//  /**
-//   * Lists the current user's appointments.
-//   */
-//  public function userList() {
-//    $uid = \Drupal::currentUser()->id();
-//
-//    $query = \Drupal::entityQuery('node')
-//      ->condition('type', 'appointment')
-//      ->condition('uid', $uid)
-//      ->execute();
-//
-//    $appointments = Node::loadMultiple($query);
-//
-//    $output = "<h2>My Appointments</h2><ul>";
-//    foreach ($appointments as $appointment) {
-//      $output .= "<li>" . $appointment->label() . "</li>";
-//    }
-//    $output .= "</ul>";
-//
-//    return new Response($output);
-//  }
-//
-//  /**
-//   * Returns a page with all agencies.
-//   */
-//  /**
-//   * Returns a page with all agencies.
-//   */
-//  public function agenciesPage() {
-//    $agencies = AgencyEntity::loadMultiple();
-//    $output = '';
-//
-//    foreach ($agencies as $agency) {
-//      $output .= '<p>' . $agency->label() . ' - ' . $agency->location . ' - ' . $agency->email . '</p>';
-//    }
-//
-//    return [
-//      '#markup' => $output,
-//    ];
-//  }
-//}
+
+    // Debug: Log the data before saving to tempstore.
+    \Drupal::logger('appointment')->debug('Data to be saved to tempstore: ' . print_r($data, TRUE));
+
+    // Save the selected time slot to the tempstore.
+    $this->tempStore->set('selected_slot', [
+//      'advisor_id' => $data['advisor_id'],
+      'start' => $data['start'],
+      'end' => $data['end'],
+      'title' => $data['title'],
+    ]);
+
+    // Debug: Log the tempstore value to verify it was saved correctly.
+    $tempstoreValue = $this->tempStore->get('selected_slot');
+    \Drupal::logger('appointment')->debug('Tempstore value after saving: ' . print_r($tempstoreValue, TRUE));
+
+    // Log a success message.
+    \Drupal::logger('appointment')->debug('Selection saved to tempstore successfully.');
+
+    // Return a success response.
+    return new JsonResponse(['status' => 'success']);
+  }}
