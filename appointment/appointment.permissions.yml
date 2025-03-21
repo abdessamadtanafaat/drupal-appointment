@@ -44,3 +44,19 @@ edit own appointment entities:
 administer appointment_agency:
   title: 'Administer agencies'
   restrict access: true
+
+# Define custom permissions for working hours field in user profiles.
+edit own field_working_hours:
+  title: 'Edit own working hours'
+  description: 'Allows users to edit their own working hours.'
+  restrict access: false
+
+view own field_working_hours:
+  title: 'View own working hours'
+  description: 'Allows users to view their own working hours.'
+  restrict access: false
+
+view any field_working_hours:
+  title: 'View any user’s working hours'
+  description: 'Allows users to view any user’s working hours.'
+  restrict access: true

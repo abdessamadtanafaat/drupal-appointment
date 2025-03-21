@@ -1,4 +1,4 @@
 services:
   appointment.manager:
     class: 'Drupal\appointment\Service\AppointmentManagerService'
-    arguments: ['@entity_type.manager']
+    arguments: ['@entity_type.manager','@database']

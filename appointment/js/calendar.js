@@ -16,8 +16,14 @@
           selectable: true, // Enable date selection
           editable: true,   // Enable event dragging and resizing
           events: [
-            // Example events
-            { id: '1', title: 'Meeting', start: new Date() }
+            {
+              id: '1',
+              title: 'Available',
+              start: new Date('2025-03-20T20:30:00Z'),
+              end: new Date('2025-03-20T21:30:00Z'),
+              color: '#00ff00'
+
+            }
           ],
           dateClick: function (info) {
             // Handle date click

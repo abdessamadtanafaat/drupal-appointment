@@ -163,7 +163,6 @@ class BookingForm extends FormBase {
       '#markup' => '<div class="intro-text"><h3>' . $this->t('Start now, book your appointment') . '</h3></div>',
     ];
 
-
     $values = $this->tempStore->get('values') ?? [];
 
     // Retrieve the agency ID from tempStore.
@@ -335,12 +334,27 @@ class BookingForm extends FormBase {
 
     // Attach the FullCalendar library.
     $form['#attached']['library'][] = 'appointment/calendar_scripts';
-//    $form['#attached']['library'][] = 'appointment/calendar_styles';
+
+    //$values = $this->tempStore->get('values') ?? [];
+
+    // Retrieve the Advisor ID from tempStore.
+    $advisor_id = $form_state->getValue('advisor_id');
+    $this->tempStore->set('advisor_id', $advisor_id);
+
+    \Drupal::logger('appointment')->notice('Stored Advisor ID in tempstore: ' . $advisor_id);
+
+
+    // Log the advisor ID for debugging.
+    \Drupal::logger('appointment')->notice('Retrieved Advisor ID from tempstore: ' . $advisor_id);
+
+    // Pass the advisor ID to JavaScript.
+    $form['#attached']['drupalSettings']['appointment']['advisor_id'] = $advisor_id;
 
     // Add the introductory text.
     $form['intro_text'] = [
       '#markup' => '<div class="intro-text"><h3>' . $this->t('Select a date and time for your appointment') . '</h3></div>',
     ];
+
 
     // Add a container for the calendar.
     $form['calendar'] = [
@@ -402,6 +416,8 @@ class BookingForm extends FormBase {
     $values = $this->tempStore->get('values') ?? [];
     $values['agency_id'] = $form_state->getValue('agency_id');
     $values['appointment_type_id'] = $form_state->getValue('appointment_type_id');
+    $values['advisor_id'] = $form_state->getValue('advisor_id');
+    // Save the values to the tempstore.
     $this->tempStore->set('values', $values);
 
     // Log the values for debugging.
@@ -467,6 +483,40 @@ class BookingForm extends FormBase {
       }
     }
 
+    if ($step === 3) {
+      // Retrieve the selected date and time.
+      $selected_datetime = $form_state->getValue('selected_datetime');
+
+      if (!empty($selected_datetime)) {
+        // Retrieve the advisor ID from tempStore.
+        $advisor_id = $this->tempStore->get('advisor_id');
+
+        // Load the advisor's working hours.
+        $appointment_manager = \Drupal::service('appointment.manager');
+        $working_hours = $appointment_manager->getWorkingHours($advisor_id);
+
+        // Convert the selected datetime to a timestamp.
+        $selected_timestamp = strtotime($selected_datetime);
+
+        // Check if the selected time falls within the advisor's working hours.
+        $is_valid = false;
+        foreach ($working_hours as $day => $hours) {
+          foreach ($hours as $time_slot) {
+            $start_time = strtotime($time_slot['start']);
+            $end_time = strtotime($time_slot['end']);
+
+            if ($selected_timestamp >= $start_time && $selected_timestamp <= $end_time) {
+              $is_valid = true;
+              break 2;
+            }
+          }
+        }
+
+        if (!$is_valid) {
+          $form_state->setErrorByName('selected_datetime', $this->t('The selected time is not within the advisor\'s working hours.'));
+        }
+      }
+    }
   }
 
   public function submitForm(array &$form, FormStateInterface $form_state) {

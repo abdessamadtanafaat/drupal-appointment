@@ -232,6 +232,22 @@ final class Appointment extends ContentEntityBase implements AppointmentInterfac
       ])
       ->setDisplayConfigurable('view', TRUE);
 
+    $fields['appointment_status'] = BaseFieldDefinition::create('string')
+      ->setLabel(t('Status'))
+      ->setDescription(t('The status of the appointment (e.g., available, booked).'))
+      ->setDefaultValue('available')
+      ->setDisplayOptions('form', [
+        'type' => 'string_textfield',
+        'weight' => -2,
+      ])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayOptions('view', [
+        'label' => 'above',
+        'type' => 'string',
+        'weight' => -2,
+      ])
+      ->setDisplayConfigurable('view', TRUE);
+
     $fields['label'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Label'))
       ->setRequired(TRUE)

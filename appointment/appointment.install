@@ -1,5 +1,9 @@
 <?php
 
+use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\field\Entity\FieldConfig;
+use Drupal\user\Entity\Role;
+
 /**
  * Implements hook_install().
  */
@@ -19,6 +23,24 @@ function appointment_install() {
 
   // Create the 'Advisor' user.
   _appointment_create_advisor_user();
+
+  // Create the working hours field.
+  _working_hours_install();
+
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function appointment_uninstall() {
+  // Delete the 'Advisor' user.
+  _appointment_delete_advisor_user();
+
+  // Remove the 'Advisor' role.
+  _appointment_delete_advisor_role();
+
+  // Remove working hours field.
+  _working_hours_delete();
 
 }
 
@@ -163,4 +185,122 @@ function _appointment_create_advisor_user() {
 
   // Log the creation of the user.
   \Drupal::logger('appointment')->notice('Created Advisor user with ID: @uid', ['@uid' => $user->id()]);
+}
+
+
+/**
+ * Deletes the 'Advisor' user.
+ */
+function _appointment_delete_advisor_user() {
+  // Load the user storage service.
+  $user_storage = \Drupal::entityTypeManager()->getStorage('user');
+
+  // Query for the 'Advisor' user by name or email.
+  $query = $user_storage->getQuery()
+    ->condition('name', 'advisor_void') // Replace with the username of the Advisor user.
+    ->accessCheck(FALSE); // Disable access checking for system operations.
+
+  $uids = $query->execute();
+
+  if (!empty($uids)) {
+    // Load the user entities.
+    $users = $user_storage->loadMultiple($uids);
+
+    // Delete the users.
+    $user_storage->delete($users);
+
+    // Log the deletion of the user.
+    \Drupal::logger('appointment')->notice('Deleted Advisor user.');
+  }
+}
+
+/**
+ * Deletes the 'Advisor' role.
+ */
+function _appointment_delete_advisor_role() {
+  // Load the 'Advisor' role.
+  $role = \Drupal\user\Entity\Role::load('advisor');
+
+  if ($role) {
+    // Delete the role.
+    $role->delete();
+
+    // Log the deletion of the role.
+    \Drupal::logger('appointment')->notice('Deleted Advisor role.');
+  }
+}
+
+
+/**
+ * Implements installation working hours.
+ */
+function _working_hours_install() {
+  $field_name = 'field_working_hours';
+  $entity_type = 'user';
+
+  // Check if the field storage already exists.
+  if (!FieldStorageConfig::loadByName($entity_type, $field_name)) {
+    // Create field storage.
+    FieldStorageConfig::create([
+      'field_name' => $field_name,
+      'entity_type' => $entity_type,
+      'type' => 'office_hours', // Can be 'string', 'text_long'.
+      'cardinality' => 1,
+    ])->save();
+  }
+
+  // Check if the field already exists for the User entity.
+  if (!FieldConfig::loadByName($entity_type, 'user', $field_name)) {
+    // Create the field.
+    FieldConfig::create([
+      'field_name' => $field_name,
+      'entity_type' => $entity_type,
+      'bundle' => 'user',
+      'label' => 'Working Hours',
+      'description' => 'The working hours of the advisor.',
+      'required' => FALSE,
+      'settings' => [],
+    ])->save();
+
+    // Enable the field in the form display.
+    $form_display = \Drupal::entityTypeManager()
+      ->getStorage('entity_form_display')
+      ->load('user.user.default');
+
+    if ($form_display) {
+      $form_display->setComponent($field_name, [
+        'type' => 'office_hours_default', // Use the widget provided by the Office Hours module.
+        'weight' => 10, // Adjust the weight as needed.
+        'settings' => [], // Add any widget-specific settings if required.
+      ])->save();
+    }
+
+  }
+
+  // Assign the field to the "Advisor" role only.
+  $role = Role::load('advisor');
+  if ($role) {
+    $role->grantPermission("edit own $field_name");
+    $role->grantPermission("view own $field_name");
+    $role->save();
+  }
+}
+
+
+/**
+ * Implements uninstallation working hours.
+ */
+function _working_hours_delete() {
+$field_name = 'field_working_hours';
+$entity_type = 'user';
+
+// Delete the field configuration.
+if ($field = FieldConfig::loadByName($entity_type, 'user', $field_name)) {
+  $field->delete();
+}
+
+// Delete field storage.
+if ($storage = FieldStorageConfig::loadByName($entity_type, $field_name)) {
+  $storage->delete();
+}
 }

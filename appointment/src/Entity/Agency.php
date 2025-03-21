@@ -11,6 +11,7 @@ use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\user\EntityOwnerTrait;
+use Drupal\office_hours\Plugin\Field\FieldType\OfficeHoursItem;
 
 /**
  * Defines the agency entity class.
@@ -133,6 +134,38 @@ final class Agency extends ContentEntityBase implements AgencyInterface {
         'label' => 'above',
         'type' => 'entity_reference_label',
         'weight' => -5,
+      ])
+      ->setDisplayConfigurable('view', TRUE);
+
+//    $fields['working_hours'] = BaseFieldDefinition::create('string_long')
+//      ->setLabel(t('Working Hours'))
+//      ->setDescription(t('The working hours of the advisor in JSON format.'))
+//      ->setDisplayOptions('form', [
+//        'type' => 'string_textarea',
+//        'weight' => -4,
+//      ])
+//      ->setDisplayConfigurable('form', TRUE)
+//      ->setDisplayOptions('view', [
+//        'label' => 'above',
+//        'type' => 'string',
+//        'weight' => -4,
+//      ])
+//      ->setDisplayConfigurable('view', TRUE);
+
+    // Add the working hours field.
+    $fields['working_hours'] = BaseFieldDefinition::create('office_hours')
+      ->setLabel(t('Working Hours'))
+      ->setDescription(t('The working hours of the agency.'))
+      ->setCardinality(7) // Allow 7 values (one for each day of the week).
+      ->setDisplayOptions('form', [
+        'type' => 'office_hours_default',
+        'weight' => -4,
+      ])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayOptions('view', [
+        'label' => 'above',
+        'type' => 'office_hours',
+        'weight' => -4,
       ])
       ->setDisplayConfigurable('view', TRUE);
 

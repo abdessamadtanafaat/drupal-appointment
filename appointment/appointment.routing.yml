@@ -101,3 +101,11 @@ entity.appointment_agency.settings:
     _title: 'Agency'
   requirements:
     _permission: 'administer appointment_agency'
+
+
+appointment.availability:
+  path: '/appointment/availability'
+  defaults:
+    _controller: '\Drupal\appointment\Controller\AvailabilityController::getAvailability'
+  requirements:
+    _permission: 'access content'
