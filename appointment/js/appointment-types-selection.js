@@ -1,25 +1,34 @@
-(function ($) {
-  $(document).ready(function () {
-    $('.appointment_types-card').click(function () {
-      // Get the selected appointment type ID from the clicked card.
-      var appointmentTypeId = $(this).data('appointment-types-id');
+(function (Drupal) {
+  Drupal.behaviors.appointmentTypeCardSelection = {
+    attach: function (context, settings) {
+      // Use a data attribute to track initialization.
+      const appointmentTypeCards = context.querySelectorAll('.appointment_types-card:not([data-initialized])');
+      appointmentTypeCards.forEach(card => {
+        card.setAttribute('data-initialized', 'true');
 
-      // Log the appointmentTypeId to the console for debugging.
-      console.log('Selected Appointment Type ID:', appointmentTypeId);
+        card.addEventListener('click', function () {
+          // Get the selected appointment type ID from the clicked card.
+          const appointmentTypeId = this.getAttribute('data-appointment-types-id');
 
-      // Store the appointment type ID in the hidden input field.
-      $('input[name="appointment_type_id"]').val(appointmentTypeId);
+          // Log the appointmentTypeId to the console for debugging.
+          console.log('Selected Appointment Type ID:', appointmentTypeId);
 
-      // Highlight the selected card (optional, for UI feedback).
-      $('.appointment_types-card').removeClass('selected'); // Remove selection from all cards.
-      $(this).addClass('selected'); // Add selection to the clicked card.
-    });
+          // Store the appointment type ID in the hidden input field.
+          document.querySelector('input[name="appointment_type_id"]').value = appointmentTypeId;
 
-    // Optionally, highlight the card on hover for better interactivity.
-    $('.appointment_types-card').hover(function () {
-      $(this).css('cursor', 'pointer');
-    }, function () {
-      $(this).css('cursor', 'default');
-    });
-  });
-})(jQuery);
+          // Highlight the selected card.
+          document.querySelectorAll('.appointment_types-card').forEach(c => c.classList.remove('selected'));
+          this.classList.add('selected');
+        });
+
+        // Optionally, highlight the card on hover for better interactivity.
+        card.addEventListener('mouseenter', function () {
+          this.style.cursor = 'pointer';
+        });
+        card.addEventListener('mouseleave', function () {
+          this.style.cursor = 'default';
+        });
+      });
+    }
+  };
+})(Drupal);

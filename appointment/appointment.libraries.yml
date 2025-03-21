@@ -15,6 +15,7 @@ appointment_scripts:
     - appointment/appointment_styles
     - core/drupal
     - core/once
+    - core/jquery.once
 
 appointment_types_styles:
   version: 1.x
@@ -28,6 +29,7 @@ appointment_types_scripts:
     js/appointment-types-selection.js: {}
   dependencies:
     - core/jquery
+    - core/jquery.once
 
 advisor_selection_scripts:
     version: 1.x
@@ -38,6 +40,7 @@ advisor_selection_scripts:
       - appointment/appointment_styles
       - core/drupal
       - core/once
+      - core/jquery.once
 advisor_selection_styles:
     version: 1.x
     css:

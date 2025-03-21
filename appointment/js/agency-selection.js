@@ -1,25 +1,34 @@
-(function ($) {
-  $(document).ready(function () {
-    $('.agency-card').click(function () {
-      // Get the selected agency ID from the clicked card.
-      var agencyId = $(this).data('agency-id');
+(function (Drupal) {
+  Drupal.behaviors.agencyCardSelection = {
+    attach: function (context, settings) {
+      // Use a data attribute to track initialization.
+      const agencyCards = context.querySelectorAll('.agency-card:not([data-initialized])');
+      agencyCards.forEach(card => {
+        card.setAttribute('data-initialized', 'true');
 
-      // Log the agencyId to the console for debugging.
-      console.log('Selected Agency ID:', agencyId);
+        card.addEventListener('click', function () {
+          // Get the selected agency ID from the clicked card.
+          const agencyId = this.getAttribute('data-agency-id');
 
-      // Store the agency ID in the hidden input field.
-      $('input[name="agency_id"]').val(agencyId);
+          // Log the agencyId to the console for debugging.
+          console.log('Selected Agency ID:', agencyId);
 
-      // Highlight the selected card (optional, for UI feedback).
-      $('.agency-card').removeClass('selected'); // Remove selection from all cards.
-      $(this).addClass('selected'); // Add selection to the clicked card.
-    });
+          // Store the agency ID in the hidden input field.
+          document.querySelector('input[name="agency_id"]').value = agencyId;
 
-    // Optionally, highlight the card on hover for better interactivity.
-    $('.agency-card').hover(function () {
-      $(this).css('cursor', 'pointer');
-    }, function () {
-      $(this).css('cursor', 'default');
-    });
-  });
-})(jQuery);
+          // Highlight the selected card.
+          document.querySelectorAll('.agency-card').forEach(c => c.classList.remove('selected'));
+          this.classList.add('selected');
+        });
+
+        // Optionally, highlight the card on hover for better interactivity.
+        card.addEventListener('mouseenter', function () {
+          this.style.cursor = 'pointer';
+        });
+        card.addEventListener('mouseleave', function () {
+          this.style.cursor = 'default';
+        });
+      });
+    }
+  };
+})(Drupal);

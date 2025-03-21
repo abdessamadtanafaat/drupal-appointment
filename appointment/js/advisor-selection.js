@@ -1,25 +1,34 @@
-(function ($) {
-  $(document).ready(function () {
-    $('.advisor-card').click(function () {
-      // Get the selected advisor ID from the clicked card.
-      var advisorId = $(this).data('advisor-id');
+(function (Drupal) {
+  Drupal.behaviors.advisorCardSelection = {
+    attach: function (context, settings) {
+      // Use a data attribute to track initialization.
+      const advisorCards = context.querySelectorAll('.advisor-card:not([data-initialized])');
+      advisorCards.forEach(card => {
+        card.setAttribute('data-initialized', 'true');
 
-      // Log the advisorId to the console for debugging.
-      console.log('Selected advisor ID:', advisorId);
+        card.addEventListener('click', function () {
+          // Get the selected advisor ID from the clicked card.
+          const advisorId = this.getAttribute('data-advisor-id');
 
-      // Store the advisor ID in the hidden input field.
-      $('input[name="advisor_id"]').val(advisorId);
+          // Log the advisorId to the console for debugging.
+          console.log('Selected Advisor ID:', advisorId);
 
-      // Highlight the selected card (optional, for UI feedback).
-      $('.advisor-card').removeClass('selected'); // Remove selection from all cards.
-      $(this).addClass('selected'); // Add selection to the clicked card.
-    });
+          // Store the advisor ID in the hidden input field.
+          document.querySelector('input[name="advisor_id"]').value = advisorId;
 
-    // Optionally, highlight the card on hover for better interactivity.
-    $('.advisor-card').hover(function () {
-      $(this).css('cursor', 'pointer');
-    }, function () {
-      $(this).css('cursor', 'default');
-    });
-  });
-})(jQuery);
+          // Highlight the selected card.
+          document.querySelectorAll('.advisor-card').forEach(c => c.classList.remove('selected'));
+          this.classList.add('selected');
+        });
+
+        // Optionally, highlight the card on hover for better interactivity.
+        card.addEventListener('mouseenter', function () {
+          this.style.cursor = 'pointer';
+        });
+        card.addEventListener('mouseleave', function () {
+          this.style.cursor = 'default';
+        });
+      });
+    }
+  };
+})(Drupal);
