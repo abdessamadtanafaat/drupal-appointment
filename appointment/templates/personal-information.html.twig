@@ -1,0 +1,19 @@
+<div class="personal-information-container">
+  <!-- Left side: Appointment details -->
+  <div class="appointment-details">
+    <h4>{{ 'Appointment Details'|t }}</h4>
+    <p><strong>{{ 'Date:'|t }}</strong> {{ appointment_details.date }}</p>
+    <p><strong>{{ 'Time:'|t }}</strong> {{ appointment_details.time }}</p>
+    <p><strong>{{ 'Title:'|t }}</strong> {{ appointment_details.title }}</p>
+  </div>
+
+  <!-- Right side: Personal information form -->
+  <div class="personal-information-form">
+    {{ form.first_name }}
+    {{ form.last_name }}
+    {{ form.phone }}
+    {{ form.email }}
+    {{ form.terms }}
+    {{ form.actions }}
+  </div>
+</div>

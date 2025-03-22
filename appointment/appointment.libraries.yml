@@ -58,3 +58,18 @@ calendar_scripts:
   dependencies:
     - core/jquery
     - core/drupal
+
+personal_information_script :
+  version: 1.x
+  js:
+    js/personal-information-script.js: { }
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/once
+    - core/jquery.once
+personal_information_style :
+  version: 1.x
+  css:
+    theme:
+      css/personal-information-style.css: { }

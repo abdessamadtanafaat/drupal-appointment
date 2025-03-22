@@ -1,105 +1,23 @@
-// (function ($, Drupal) {
-//   Drupal.behaviors.initializeFullCalendar = {
-//     attach: function (context, settings) {
-//       // Ensure the DOM is fully loaded.
-//       $(document).ready(function () {
-//         var calendarEl = document.getElementById('calendar');
-//
-//         // Get the advisor ID from Drupal settings.
-//         var advisor_id = settings.appointment.advisor_id;
-//
-//         // Log the advisor ID for debugging.
-//         console.log('Fetching availability for advisor ID:', advisor_id);
-//
-//         // Fetch advisor availability via AJAX.
-//         $.ajax({
-//           url: '/appointment/availability',
-//           type: 'GET',
-//           data: { advisor_id: advisor_id },
-//           success: function (response) {
-//             // Log the AJAX response for debugging.
-//             console.log('Received availability data:', response);
-//
-//             // Extract available time ranges for selectConstraint.
-//             var availableSlots = response.events
-//               .filter(event => event.color === '#00ff00') // Filter available slots.
-//               .map(event => ({
-//                 start: event.start,
-//                 end: event.end,
-//               }));
-//
-//             // Initialize FullCalendar.
-//             var calendar = new FullCalendar.Calendar(calendarEl, {
-//               initialView: 'timeGridWeek', // Default view
-//               headerToolbar: {
-//                 left: 'prev,next today',
-//                 center: 'title',
-//                 right: 'dayGridMonth,timeGridWeek,timeGridDay'
-//               },
-//               selectable: true, // Enable date selection
-//               editable: false,  // Disable event dragging and resizing
-//               events: response.events, // Pass fetched events to FullCalendar.
-//               selectConstraint: availableSlots, // Restrict selection to available slots.
-//               selectAllow: function (info) {
-//                 // Check if the selected time is entirely within any available slot.
-//                 var selectedStart = info.start;
-//                 var selectedEnd = info.end;
-//                 var isAvailable = false;
-//
-//                 availableSlots.forEach(function (slot) {
-//                   var slotStart = new Date(slot.start);
-//                   var slotEnd = new Date(slot.end);
-//
-//                   // Check if the selected time is entirely within the working hours.
-//                   if (
-//                     selectedStart >= slotStart &&
-//                     selectedEnd <= slotEnd
-//                   ) {
-//                     isAvailable = true;
-//                   }
-//                 });
-//
-//                 return isAvailable;
-//               },
-//               select: function (info) {
-//                 // Handle date selection.
-//                 var selectedDate = info.startStr;
-//                 var selectedTime = info.endStr;
-//                 console.log('Selected Date and Time:', selectedDate, selectedTime);
-//
-//                 // Set the selected date and time in the hidden field.
-//                 $('#edit-selected-datetime').val(selectedDate + ' ' + selectedTime);
-//               },
-//               dateClick: function (info) {
-//                 // Handle date click
-//                 console.log('Date clicked: ' + info.dateStr);
-//               },
-//               eventClick: function (info) {
-//                 // Handle event click
-//                 console.log('Event clicked: ' + info.event.title);
-//               }
-//             });
-//
-//             // Render the calendar.
-//             calendar.render();
-//           },
-//           error: function (xhr, status, error) {
-//             // Log any AJAX errors for debugging.
-//             console.error('AJAX request failed:', status, error);
-//           }
-//         });
-//       });
-//     }
-//   };
-// })(jQuery, Drupal);
-//
-
 (function ($, Drupal) {
   Drupal.behaviors.initializeFullCalendar = {
     attach: function (context, settings) {
       // Ensure the DOM is fully loaded.
-      $(document).ready(function () {
+      // Use 'once' to ensure this behavior is only attached once.
+
+      $(once('initializeFullCalendar', '#calendar', context)).each(function () {
         var calendarEl = document.getElementById('calendar');
+
+        // Get the tempstore values from Drupal settings.
+        var agency_id = settings.appointment.agency_id;
+        var appointment_type_id = settings.appointment.appointment_type_id;
+        var advisor_id = settings.appointment.advisor_id;
+
+        // Log the tempstore values for debugging.
+        console.log('Tempstore values:', {
+          agency_id: agency_id,
+          appointment_type_id: appointment_type_id,
+          advisor_id: advisor_id,
+        });
 
         // Initialize the calendar using the browser global method.
         var calendar = new FullCalendar.Calendar(calendarEl, {

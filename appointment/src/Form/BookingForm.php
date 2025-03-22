@@ -80,6 +80,8 @@ class BookingForm extends FormBase {
       case 6:
         $form = $this->step6($form, $form_state);
         break;
+      default:
+        throw new \InvalidArgumentException('Invalid step');
     }
 
     return $form;
@@ -169,9 +171,9 @@ class BookingForm extends FormBase {
     $agencyId = $form_state->getValue('agency_id');
     $this->tempStore->set('agency_id', $agencyId);
 
-    \Drupal::logger('appointment')->notice('Stored Agency ID in tempstore: ' . $agencyId);
+    \Drupal::logger('appointment')->notice('Stored Agency ID in tempstore: ' . print_r($values, TRUE));
 
-    // Add a hidden field to store the agency ID.
+     // Add a hidden field to store the agency ID.
     $form['agency_id'] = [
       '#type' => 'hidden',
       '#value' => $agencyId,
@@ -256,16 +258,29 @@ class BookingForm extends FormBase {
     $values = $this->tempStore->get('values') ?? [];
 
     // Retrieve the agency ID from tempStore.
-    $agencyId = $form_state->getValue('agency_id');
-    $this->tempStore->set('agency_id', $agencyId);
+    $appointment_type_id = $form_state->getValue('appointment_type_id');
+    $this->tempStore->set('appointment_type_id', $appointment_type_id);
 
-    \Drupal::logger('appointment')->notice('Stored Agency ID in tempstore: ' . $agencyId);
+    \Drupal::logger('appointment')->notice('Stored Agency ID in tempstore: ' . $appointment_type_id);
 
     // Add a hidden field to store the agency ID.
     $form['agency_id'] = [
       '#type' => 'hidden',
-      '#value' => $agencyId,
-      '#default_value' => $values['agency_id'] ?? '',
+      '#value' => $appointment_type_id,
+      '#default_value' => $values['appointment_type_id'] ?? '',
+    ];
+
+    // Retrieve the appointment Type  ID from tempStore.
+    $appointmentTypeID = $form_state->getValue('agency_id');
+    $this->tempStore->set('appointment_type_id', $appointmentTypeID);
+
+    \Drupal::logger('appointment')->notice('Stored Appointment Type ID in tempstore: ' . print_r($values, TRUE));
+
+    // Add a hidden field to store the agency ID.
+    $form['appointment_type_id'] = [
+      '#type' => 'hidden',
+      '#value' => $appointmentTypeID,
+      '#default_value' => $values['appointment_type_id'] ?? '',
     ];
 
     // Retrieve the list of advisors.
@@ -326,6 +341,9 @@ class BookingForm extends FormBase {
     return $form;
   }
 
+  /**
+   * Step 4:  Date and Time Selection .
+   */
 
   public function step4($form, FormStateInterface $form_state) {
     // Enable AJAX for the form.
@@ -335,20 +353,22 @@ class BookingForm extends FormBase {
     // Attach the FullCalendar library.
     $form['#attached']['library'][] = 'appointment/calendar_scripts';
 
-    //$values = $this->tempStore->get('values') ?? [];
+    // Retrieve the appointment data from tempstore.
+    $values = $this->tempStore->get('values') ?? [];
 
-    // Retrieve the Advisor ID from tempStore.
-    $advisor_id = $form_state->getValue('advisor_id');
-    $this->tempStore->set('advisor_id', $advisor_id);
-
-    \Drupal::logger('appointment')->notice('Stored Advisor ID in tempstore: ' . $advisor_id);
+//    \Drupal::logger('appointment')->notice('Stored Advisor ID in tempstore: ' . $advisor_id);
 
 
     // Log the advisor ID for debugging.
-    \Drupal::logger('appointment')->notice('Retrieved Advisor ID from tempstore: ' . $advisor_id);
+//    \Drupal::logger('appointment')->notice('Retrieved Advisor ID from tempstore: ' . $advisor_id);
 
-    // Pass the advisor ID to JavaScript.
-    $form['#attached']['drupalSettings']['appointment']['advisor_id'] = $advisor_id;
+    // Pass the tempstore data to JavaScript.
+    $form['#attached']['drupalSettings']['appointment'] = [
+      'agency_id' => $values['agency_id'] ?? null,
+      'appointment_type_id' => $values['appointment_type_id'] ?? null,
+      'advisor_id' => $values['advisor_id'] ?? null,
+    ];
+
 
     // Add the introductory text.
     $form['intro_text'] = [
@@ -398,6 +418,139 @@ class BookingForm extends FormBase {
   }
 
   /**
+   * Step 5: Personal Information.
+   */
+
+  public function step5(array &$form, FormStateInterface $form_state) {
+    // Enable AJAX for the form.
+    $form['#prefix'] = '<div id="booking-form-wrapper">';
+    $form['#suffix'] = '</div>';
+
+    // Attach the necessary libraries.
+//    $form['#attached']['library'][] = 'appointment/personal_information_script';
+    $form['#attached']['library'][] = 'appointment/personal_information_style';
+
+    // Retrieve the appointment data from tempstore.
+    $values = $this->tempStore->get('values') ?? [];
+
+    // Log the tempstore data for debugging.
+    \Drupal::logger('appointment')->notice('Tempstore data in step5: ' . print_r($values, TRUE));
+
+    // Add the introductory text.
+    $form['intro_text'] = [
+      '#markup' => '<div class="intro-text"><h3>' . $this->t('Fill in your personal information') . '</h3></div>',
+    ];
+
+    // Container for the form layout.
+    $form['container'] = [
+      '#type' => 'container',
+      '#attributes' => ['class' => ['personal-information-container']],
+    ];
+
+    // Left side: Display appointment details.
+    $form['container']['appointment_details'] = [
+      '#type' => 'container',
+      '#attributes' => ['class' => ['appointment-details']],
+      '#markup' => $this->renderAppointmentDetails($values),
+    ];
+
+    // Right side: Personal information form.
+    $form['container']['personal_information'] = [
+      '#type' => 'container',
+      '#attributes' => ['class' => ['personal-information-form']],
+    ];
+
+    // First name field.
+    $form['container']['personal_information']['first_name'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('First Name'),
+      '#required' => TRUE,
+    ];
+
+    // Last name field.
+    $form['container']['personal_information']['last_name'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Last Name'),
+      '#required' => TRUE,
+    ];
+
+    // Phone field.
+    $form['container']['personal_information']['phone'] = [
+      '#type' => 'tel',
+      '#title' => $this->t('Phone'),
+      '#required' => TRUE,
+    ];
+
+    // Email field.
+    $form['container']['personal_information']['email'] = [
+      '#type' => 'email',
+      '#title' => $this->t('Email'),
+      '#required' => TRUE,
+    ];
+
+    // Terms and conditions checkbox.
+    $form['container']['personal_information']['terms'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('I agree to the terms and conditions'),
+      '#required' => TRUE,
+    ];
+
+    // Navigation buttons.
+    $form['actions']['prev'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Previous'),
+      '#submit' => ['::prevStep'],
+      '#limit_validation_errors' => [],
+      '#ajax' => [
+        'callback' => '::updateFormStep',
+        'wrapper' => 'booking-form-wrapper',
+        'effect' => 'fade',
+      ],
+    ];
+
+    $form['actions']['next'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Next'),
+      '#submit' => ['::nextStep'],
+      '#ajax' => [
+        'callback' => '::updateFormStep',
+        'wrapper' => 'booking-form-wrapper',
+        'effect' => 'fade',
+      ],
+    ];
+
+    return $form;
+  }
+  /**
+   * Helper function to render appointment details.
+   */
+  public function step6($form, FormStateInterface $form_state) {
+
+  }
+
+  protected function renderAppointmentDetails($values) {
+    if (isset($values['selected_slot'])) {
+      $start = $values['selected_slot']['start'];
+      $end = $values['selected_slot']['end'];
+      $title = $values['selected_slot']['title'];
+
+      // Extract date, start hour, and end hour.
+      $date = date('Y-m-d', strtotime($start)); // Format: YYYY-MM-DD
+      $start_time = date('H:i', strtotime($start)); // Format: HH:MM (24-hour format)
+      $end_time = date('H:i', strtotime($end)); // Format: HH:MM (24-hour format)
+
+      return '
+            <div class="appointment-details">
+                <h4>' . $this->t('Appointment Details') . '</h4>
+                <p><strong>' . $this->t('Date:') . '</strong> ' . $date . '</p>
+                <p><strong>' . $this->t('Time:') . '</strong> ' . $start_time . ' - ' . $end_time . '</p>
+                <p><strong>' . $this->t('Title:') . '</strong> ' . $title . '</p>
+            </div>
+        ';
+    }
+    return '';
+  }
+  /**
    * Updates the form dynamically using AJAX.
    */
   public function updateFormStep(array $form, FormStateInterface $form_state) {
@@ -413,18 +566,31 @@ class BookingForm extends FormBase {
 
     $currentStep = $form_state->get('step') ?? 1;
 
+    // Log the current step for debugging.
+    \Drupal::logger('appointment')->notice('Current Step: ' . $currentStep);
+
+
     $values = $this->tempStore->get('values') ?? [];
     $values['agency_id'] = $form_state->getValue('agency_id');
     $values['appointment_type_id'] = $form_state->getValue('appointment_type_id');
     $values['advisor_id'] = $form_state->getValue('advisor_id');
-    // Save the values to the tempstore.
-    $this->tempStore->set('values', $values);
+
+      // Add the personal information to the appointment data.
+      $values['personal_information'] = [
+        'first_name' => $form_state->getValue('first_name'),
+        'last_name' => $form_state->getValue('last_name'),
+        'phone' => $form_state->getValue('phone'),
+        'email' => $form_state->getValue('email'),
+        'terms' => $form_state->getValue('terms'),
+      ];
+
+
+      // Save the values to the tempstore.
+      $this->tempStore->set('personal_information', $values);
+
 
     // Log the values for debugging.
     \Drupal::logger('appointment')->notice('TempStore Values: ' . print_r($values, TRUE));
-
-    // Log the current step for debugging.
-    \Drupal::logger('appointment')->notice('Current Step: ' . $currentStep);
 
     // Move to the next step.
     $nextStep = $currentStep + 1;
@@ -520,6 +686,9 @@ class BookingForm extends FormBase {
   }
 
   public function submitForm(array &$form, FormStateInterface $form_state) {
+    // Get the current step.
+    $step = $form_state->get('step') ?? 1;
+
     // Retrieve the selected agency ID from the form submission.
     $agencyId = $form_state->getValue('agency_id');
 
@@ -528,6 +697,7 @@ class BookingForm extends FormBase {
 
     // Move to the next step.
     $form_state->set('step', 2);
+
     $form_state->setRebuild(TRUE);
 
     // save in the database !!

@@ -113,9 +113,18 @@ appointment.availability:
 appointment.save_selection:
   path: '/appointment/save-selection'
   defaults:
-    _controller: '\Drupal\appointment\Controller\AppointmentController::saveSelection'
+    _controller: '\Drupal\appointment\Controller\AppointmentController::saveSelectionTime'
     _title: 'Save Selection'
   requirements:
     _permission: 'access content'
 #  options:
 #    _auth: [basic_auth]
+
+#appointment.save_personal_information:
+#  path: '/appointment/save-personal-information'
+#  defaults:
+#    _controller: '\Drupal\appointment\Controller\AppointmentController::savePersonalInformation'
+#    _title: 'Save Personal Information'
+#  methods: [POST]
+#  requirements:
+#    _permission: 'access content'
