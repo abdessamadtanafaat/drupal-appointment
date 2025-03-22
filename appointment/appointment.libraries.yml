@@ -80,3 +80,8 @@ confirm_information_style :
     theme:
       css/confirm-information-style.css: { }
 
+confirmation_style  :
+  version: 1.x
+  css:
+    theme:
+      css/appointment-confirmation.css: { }

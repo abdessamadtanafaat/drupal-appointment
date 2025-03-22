@@ -1,0 +1,11 @@
+{# Example: appointment-confirmation-message.html.twig #}
+<div class="confirmation-message">
+  <div class="confirmation-image">
+    <img src="{{ image_path }}" alt="{{ 'Success'|t }}" />
+  </div>
+  <h3 class="confirmation-title">{{ title }}</h3>
+  <p class="confirmation-text">{{ message }}</p>
+  <div class="confirmation-actions">
+    {{ change_button }}
+  </div>
+</div>

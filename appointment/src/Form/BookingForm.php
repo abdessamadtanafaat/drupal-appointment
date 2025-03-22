@@ -564,7 +564,7 @@ class BookingForm extends FormBase {
       '#value' => $this->t('Confirm'),
       '#submit' => ['::submitForm'],
       '#ajax' => [
-        'callback' => '::updateFormStep',
+        'callback' => '::submitForm',
         'wrapper' => 'booking-form-wrapper',
         'effect' => 'fade',
       ],
@@ -720,28 +720,91 @@ class BookingForm extends FormBase {
     }
   }
 
-  public function submitForm(array &$form, FormStateInterface $form_state) {
 
-    // This is the final step, save the appointment.
+  // not knowing the css !
+  public function submitForm(array &$form, FormStateInterface $form_state) {
+    // Retrieve the appointment data from tempStore.
     $values = $this->tempStore->get('values') ?? [];
 
+    // Log the tempstore data for debugging.
     \Drupal::logger('appointment')->notice('TempStore Values: ' . print_r($values, TRUE));
 
     // Save the appointment data (you need to implement this method).
-      //$this->saveAppointment($values);
+     $this->saveAppointment($values);
 
-      // Display a success message.
-      \Drupal::messenger()->addMessage($this->t('The appointment is saved.'));
+    // Display a success message.
+    \Drupal::messenger()->addMessage($this->t('The appointment is saved.'));
 
-      // Optionally, clear the tempstore after saving.
-      $this->tempStore->delete('values');
+//    // Optionally, clear the tempstore after saving.
+//    $this->tempStore->delete('values');
 
-      // Redirect to a confirmation page or the homepage.
-      $form_state->setRedirect('<front>');
+    // Define the path to the image.
+    $image_path = base_path() . \Drupal::service('extension.list.module')->getPath('appointment') . '/assets/calendar-success.png';
 
+    // Attach the CSS library.
+    $form['#attached']['library'][] = 'appointment/confirmation_style';
 
+    // Prepare the confirmation message.
+    $confirmation_message = [
+      '#theme' => 'appointment_confirmation_message',
+      '#image_path' => $image_path,
+      '#title' => $this->t('Your appointment has been successfully booked.'),
+      '#message' => $this->t('You can modify your appointment by entering your phone number.'),
+      '#change_button' => [
+        '#type' => 'link',
+        '#title' => $this->t('Change Appointment'),
+        '#url' => \Drupal\Core\Url::fromRoute('<front>'), // Replace with the correct route for changing the appointment.
+        '#attributes' => [
+          'class' => ['button', 'button--primary'],
+        ],
+      ],
+    ];
+
+    // Render the confirmation message.
+    $confirmation_message_rendered = \Drupal::service('renderer')->render($confirmation_message);
+
+    // Return an AJAX response to replace the form with the confirmation message.
+    $response = new \Drupal\Core\Ajax\AjaxResponse();
+    $response->addCommand(new \Drupal\Core\Ajax\ReplaceCommand('#booking-form-wrapper', $confirmation_message_rendered));
+
+    return $response;
   }
 
+
+//
+//  // knowing the css but displayed under the step 6 !
+//  public function submitForm(array &$form, FormStateInterface $form_state) {
+//    // Retrieve the appointment data from tempStore.
+//    $values = $this->tempStore->get('values') ?? [];
+//
+//    // Log the tempstore data for debugging.
+//    \Drupal::logger('appointment')->notice('TempStore Values: ' . print_r($values, TRUE));
+//
+//    // Define the path to the image.
+//    $image_path = base_path() . \Drupal::service('extension.list.module')->getPath('appointment') . '/assets/calendar-success.png';
+//
+//    // Attach the CSS library.
+//    $form['#attached']['library'][] = 'appointment/confirmation_style';
+//
+//    // Add the confirmation message to the form.
+//    $form['confirmation_message'] = [
+//      '#theme' => 'appointment_confirmation_message',
+//      '#image_path' => $image_path,
+//      '#title' => $this->t('Your appointment has been successfully booked.'),
+//      '#message' => $this->t('You can modify your appointment by entering your phone number.'),
+//      '#change_button' => [
+//        '#type' => 'link',
+//        '#title' => $this->t('Change Appointment'),
+//        '#url' => \Drupal\Core\Url::fromRoute('<front>'), // Replace with the correct route for changing the appointment.
+//        '#attributes' => [
+//          'class' => ['button', 'button--primary'],
+//        ],
+//      ],
+//    ];
+//
+//    // Return the form.
+//    return $form;
+//  }
   /**
    * Retrieves available agencies.
    *
@@ -837,24 +900,53 @@ class BookingForm extends FormBase {
     ];
   }
 
+  /**
+   * Saves the appointment data to the database.
+   *
+   * @param array $values
+   *   The appointment data from the tempStore.
+   */
   protected function saveAppointment(array $values) {
-    //Save the appointment to a custom table.
+    // Generate a UUID for the appointment.
+    $uuid_service = \Drupal::service('uuid');
+    $uuid = $uuid_service->generate();
+
+    // Get the current user ID.
+    $uid = \Drupal::currentUser()->id();
+
+    // Prepare the data for insertion.
     $fields = [
-      'agency_id' => $values['agency_id'],
-      'appointment_type_id' => $values['appointment_type_id'],
-      'advisor_id' => $values['advisor_id'],
-      'selected_datetime' => $values['selected_datetime'],
-      'first_name' => $values['first_name'],
-      'last_name' => $values['last_name'],
-      'phone' => $values['phone'],
-      'email' => $values['email'],
-      'terms' => $values['terms'],
+      'uuid' => $uuid, // Generate a UUID.
+      'agency_id' => $values['agency_id'] ?? NULL,
+      'appointment_type' => $values['appointment_type_id'] ?? NULL,
+      'advisor_id' => $values['advisor_id'] ?? NULL,
+      'appointment_date' => $values['selected_slot']['start'] ?? NULL, // Use the start time of the selected slot.
+      'first_name' => $values['first_name'] ?? NULL,
+      'last_name' => $values['last_name'] ?? NULL,
+      'email' => $values['email'] ?? NULL,
+      'phone' => $values['phone'] ?? NULL,
+      'appointment_status' => 'pending', // Default status.
+      'label' => $values['selected_slot']['title'] ?? NULL, // Use the title of the selected slot.
+      'status' => 1, // Default status (active).
+      'description__value' => '', // Empty description.
+      'description__format' => 'basic_html', // Default format.
+      'uid' => $uid, // Current user ID.
+      'created' => \Drupal::time()->getRequestTime(), // Current timestamp.
+      'changed' => \Drupal::time()->getRequestTime(), // Current timestamp.
     ];
 
-    \Drupal::database()->insert('appointments')
-      ->fields($fields)
-      ->execute();
-  }
+    // Insert the data into the database.
+    try {
+      \Drupal::database()->insert('appointment')
+        ->fields($fields)
+        ->execute();
 
+      // Log the insertion for debugging.
+      \Drupal::logger('appointment')->notice('Appointment saved: ' . print_r($fields, TRUE));
+    } catch (\Exception $e) {
+      // Log the error if the insertion fails.
+      \Drupal::logger('appointment')->error('Failed to save appointment: ' . $e->getMessage());
+    }
+  }
 
 }

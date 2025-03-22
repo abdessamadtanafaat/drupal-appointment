@@ -42,5 +42,15 @@ function appointment_theme() {
       ],
       'template' => 'confirm-information',
     ],
+    'appointment_confirmation_message' => [
+      'variables' => [
+        'image_path' => '',
+        'title' => '',
+        'message' => '',
+        'change_button' => [],
+      ],
+      'template' => 'appointment-confirmation-message',
+    ],
+
   ];
 }

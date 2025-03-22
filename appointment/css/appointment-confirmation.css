@@ -1,0 +1,47 @@
+.confirmation-message {
+  text-align: center;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.confirmation-image img {
+  width: 50%; /* Make the image half its original size */
+  height: auto;
+  margin-bottom: 20px;
+  display: block; /* Ensure the image is centered */
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.confirmation-title {
+  font-size: 24px;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.confirmation-text {
+  font-size: 16px;
+  color: #007bff; /* Blue color */
+  margin-bottom: 20px;
+}
+
+.confirmation-actions {
+  text-align: center; /* Center the button */
+}
+
+.confirmation-actions .button {
+  background-color: #007bff;
+  color: #fff;
+  padding: 10px 20px;
+  text-decoration: none;
+  border-radius: 5px;
+  display: inline-block; /* Ensure the button is centered */
+}
+
+.confirmation-actions .button:hover {
+  background-color: #0056b3;
+}
