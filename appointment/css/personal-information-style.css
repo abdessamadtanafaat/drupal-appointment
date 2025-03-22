@@ -14,38 +14,26 @@
   background-color: #f9f9f9;
 }
 
-.appointment-details h4 {
+/* Style for appointment title */
+.appointment-title {
+  color: blue;
   margin-top: 0;
 }
 
-/* Right side: Personal information form */
-.personal-information-form {
-  flex: 2;
-  padding: 20px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  background-color: #f9f9f9;
+/* Style for appointment labels (Day: and Time:) */
+.appointment-label {
+  color: gray;
+  margin-bottom: 0;
 }
 
-.personal-information-form .form-item {
-  margin-bottom: 15px;
+/* Style for appointment values (date and time) */
+.appointment-value {
+  margin-top: 0;
 }
 
-.personal-information-form label {
-  display: block;
-  font-weight: bold;
-  margin-bottom: 5px;
-}
-
-.personal-information-form input[type="text"],
-.personal-information-form input[type="tel"],
-.personal-information-form input[type="email"] {
-  width: 100%;
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
-.personal-information-form input[type="checkbox"] {
-  margin-right: 10px;
+.calendar-icon {
+  width: 150px; /* Adjust the width as needed */
+  height: auto; /* Maintain aspect ratio */
+  display: block; /* Ensure the image is centered */
+  margin: 0 auto 20px; /* Center the image and add spacing below */
 }

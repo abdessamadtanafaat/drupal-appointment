@@ -27,7 +27,19 @@ function appointment_theme() {
       ],
       'template' => 'advisor-card',
     ],
-
-
+    'personal_information' => [
+      'variables' => [
+        'appointment_details' => NULL,
+        'form' => NULL,
+        'image_path' => NULL,
+      ],
+      'template' => 'personal-information',
+    ],
+    'confirm_information' => [
+      'variables' => [
+        'appointment_details_confirmation' => [],
+      ],
+      'template' => 'confirm-information',
+    ],
   ];
 }

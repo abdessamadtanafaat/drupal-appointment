@@ -1,19 +1,26 @@
-<div class="personal-information-container">
-  <!-- Left side: Appointment details -->
-  <div class="appointment-details">
-    <h4>{{ 'Appointment Details'|t }}</h4>
-    <p><strong>{{ 'Date:'|t }}</strong> {{ appointment_details.date }}</p>
-    <p><strong>{{ 'Time:'|t }}</strong> {{ appointment_details.time }}</p>
-    <p><strong>{{ 'Title:'|t }}</strong> {{ appointment_details.title }}</p>
-  </div>
+{#<div class="personal-information-container">#}
+{#  <!-- Left side: Appointment details -->#}
+{#  <div class="appointment-details">#}
+{#    <img src="{{ image_path }}" alt="Calendar Icon" class="calendar-icon">#}
 
-  <!-- Right side: Personal information form -->
-  <div class="personal-information-form">
-    {{ form.first_name }}
-    {{ form.last_name }}
-    {{ form.phone }}
-    {{ form.email }}
-    {{ form.terms }}
-    {{ form.actions }}
-  </div>
-</div>
+{#    <h4 class="appointment-title">{{ 'Your appointment'|t }}</h4>#}
+
+{#    <p class="appointment-label"><strong>{{ 'Day:'|t }}</strong></p>#}
+{#    <p class="appointment-value"><strong>{{ appointment_details.date }}</strong></p>#}
+
+{#    <p class="appointment-label"><strong>{{ 'Time:'|t }}</strong></p>#}
+{#    <p class="appointment-value"><strong>{{ appointment_details.time }}</strong></p>#}
+{#  </div>#}
+
+{#  <!-- Right side: Personal information form -->#}
+{#  <div class="personal-information-form">#}
+{#    #}{# Render the personal information form fields #}
+{#    {{ form.personal_information.first_name }}#}
+{#    {{ form.personal_information.last_name }}#}
+{#    {{ form.personal_information.phone }}#}
+{#    {{ form.personal_information.email }}#}
+{#    {{ form.personal_information.terms }}#}
+{#    #}{# Render the navigation buttons #}
+{#    {{ form.actions }}#}
+{#  </div>#}
+{#</div>#}

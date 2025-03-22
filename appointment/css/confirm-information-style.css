@@ -1,0 +1,94 @@
+/* Container for the confirmation form */
+.confirm-information-container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border: 2px solid #007bff; /* Blue border */
+  border-radius: 8px;
+}
+
+/* Confirmation title */
+.confirmation-title {
+  text-align: center;
+  font-size: 24px;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+/* Appointment type */
+.appointment-type {
+  text-align: center;
+  font-size: 18px;
+  color: #555;
+  margin-bottom: 20px;
+}
+
+/* Section styling */
+.details-section {
+  margin-bottom: 20px;
+  padding: 15px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+/* Section header */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #ccc; /* Grey line under the header */
+}
+
+/* Section title */
+.section-title {
+  font-size: 20px; /* Bigger font size */
+  color: #007bff; /* Blue color */
+  margin: 0;
+}
+
+/* Modify button */
+.modify-button {
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.modify-button:hover {
+  background-color: #0056b3;
+}
+
+/* Section content */
+.section-content {
+  font-size: 16px;
+}
+
+/* Two-column layout */
+.two-column-layout {
+  display: flex;
+  gap: 20px; /* Spacing between columns */
+}
+
+.column {
+  flex: 1; /* Each column takes equal space */
+}
+
+/* Detail label */
+.detail-label {
+  margin: 10px 0 5px;
+  color: #555;
+}
+
+/* Detail value */
+.detail-value {
+  margin: 0 0 15px;
+  color: #333;
+  font-weight: bold; /* Make values strong */
+}

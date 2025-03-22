@@ -70,7 +70,9 @@
                 url: '/appointment/save-selection',
                 type: 'POST',
                 data: JSON.stringify({ // Ensure the data is sent as JSON.
-                  //advisor_id: advisor_id,
+                  agency_id: agency_id,
+                  appointment_type_id: appointment_type_id,
+                  advisor_id: advisor_id,
                   start: info.startStr,
                   end: info.endStr,
                   title: title,

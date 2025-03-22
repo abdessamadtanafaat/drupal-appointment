@@ -68,20 +68,17 @@ class AppointmentController extends ControllerBase {
     // Retrieve the existing appointment data from tempstore.
     $values = $this->tempStore->get('values') ?? [];
 
-    //$this->tempStore->set('selected_slot', );
-
-    // Ensure $values is an array.
-    //    if (!is_array($values)) {
-    //      \Drupal::logger('appointment')->warning('Tempstore data is not an array. Initializing as empty array.');
-    //      $values = [];
-    //    }
-
     // Add the selected time slot to values.
     $values['selected_slot'] = [
       'start' => $data['start'],
       'end' => $data['end'],
       'title' => $data['title'],
     ];
+
+
+    $values['agency_id'] = $data['agency_id'];
+    $values['appointment_type_id'] = $data['appointment_type_id'];
+    $values['advisor_id'] = $data['advisor_id'];
 
     // Save the updated appointment data to tempstore.
     $this->tempStore->set('values', $values);

@@ -1,0 +1,50 @@
+<div class="confirm-information-container">
+  <h3 class="confirmation-title">{{ 'Confirm Your Appointment'|t }}</h3>
+  <p class="appointment-type">{{ appointment_details_confirmation.appointment_type }}</p>
+
+  <!-- User Profile Section -->
+  <div class="details-section user-profile">
+    <div class="section-header">
+      <h4 class="section-title">{{ 'User Profile'|t }}</h4>
+      <button class="modify-button">{{ 'Modify'|t }}</button>
+    </div>
+    <div class="section-content">
+      <div class="two-column-layout">
+        <div class="column">
+          <p class="detail-label">{{ 'First Name:'|t }}</p>
+          <p class="detail-value"><strong>{{ appointment_details_confirmation.first_name }}</strong></p>
+
+          <p class="detail-label">{{ 'Last Name:'|t }}</p>
+          <p class="detail-value"><strong>{{ appointment_details_confirmation.last_name }}</strong></p>
+        </div>
+        <div class="column">
+          <p class="detail-label">{{ 'Phone:'|t }}</p>
+          <p class="detail-value"><strong>{{ appointment_details_confirmation.phone }}</strong></p>
+
+          <p class="detail-label">{{ 'Email:'|t }}</p>
+          <p class="detail-value"><strong>{{ appointment_details_confirmation.email }}</strong></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Appointment Section -->
+  <div class="details-section appointment-details">
+    <div class="section-header">
+      <h4 class="section-title">{{ 'Appointment'|t }}</h4>
+      <button class="modify-button">{{ 'Change Date'|t }}</button>
+    </div>
+    <div class="section-content">
+      <div class="two-column-layout">
+        <div class="column">
+          <p class="detail-label">{{ 'Date:'|t }}</p>
+          <p class="detail-value"><strong>{{ appointment_details_confirmation.date }}</strong></p>
+        </div>
+        <div class="column">
+          <p class="detail-label">{{ 'Time:'|t }}</p>
+          <p class="detail-value"><strong>{{ appointment_details_confirmation.time }}</strong></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
