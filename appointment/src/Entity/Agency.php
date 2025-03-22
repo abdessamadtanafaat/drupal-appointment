@@ -159,13 +159,13 @@ final class Agency extends ContentEntityBase implements AgencyInterface {
       ->setRequired(TRUE)
       ->setSetting('max_length', 255)
       ->setDisplayOptions('form', [
-        'type' => 'string_textfield',
+        'type' => 'hidden',
         'weight' => -5,
       ])
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayOptions('view', [
         'label' => 'hidden',
-        'type' => 'string',
+        'type' => 'hidden',
         'weight' => -5,
       ])
       ->setDisplayConfigurable('view', TRUE);

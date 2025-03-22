@@ -79,6 +79,93 @@ final class Appointment extends ContentEntityBase implements AppointmentInterfac
   public static function baseFieldDefinitions(EntityTypeInterface $entity_type) {
     $fields = parent::baseFieldDefinitions($entity_type);
 
+    $fields['title'] = BaseFieldDefinition::create('string')
+      ->setLabel(t('Title'))
+      ->setDescription(t('The title of the appointment.'))
+      ->setRequired(TRUE)
+      ->setSetting('max_length', 255)
+      ->setDisplayOptions('form', [
+        'type' => 'string_textfield',
+        'weight' => -11,
+      ])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayOptions('view', [
+        'label' => 'hidden',
+        'type' => 'string',
+        'weight' => -11,
+      ])
+      ->setDisplayConfigurable('view', TRUE);
+
+    $fields['description'] = BaseFieldDefinition::create('string')
+      ->setLabel(t('Title'))
+      ->setDescription(t('The title of the appointment.'))
+      ->setRequired(TRUE)
+      ->setSetting('max_length', 255)
+      ->setDisplayOptions('form', [
+        'type' => 'string_textfield',
+        'weight' => -10,
+      ])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayOptions('view', [
+        'label' => 'hidden',
+        'type' => 'string',
+        'weight' => -10,
+      ])
+      ->setDisplayConfigurable('view', TRUE);
+
+    // Appointment Type Name.
+    $fields['appointment_type_name'] = BaseFieldDefinition::create('string')
+      ->setLabel(t('Appointment Type Name'))
+      ->setDescription(t('The name of the appointment type.'))
+      ->setRequired(FALSE)
+      ->setSetting('max_length', 255)
+      ->setDisplayOptions('form', [
+        'type' => 'string_textfield',
+        'weight' => -7,
+      ])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayOptions('view', [
+        'label' => 'above',
+        'type' => 'string',
+        'weight' => -7,
+      ])
+      ->setDisplayConfigurable('view', TRUE);
+
+    // Advisor Name.
+    $fields['advisor'] = BaseFieldDefinition::create('string')
+      ->setLabel(t('Advisor Name'))
+      ->setDescription(t('The name of the advisor.'))
+      ->setRequired(FALSE)
+      ->setSetting('max_length', 255)
+      ->setDisplayOptions('form', [
+        'type' => 'string_textfield',
+        'weight' => -6,
+      ])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayOptions('view', [
+        'label' => 'above',
+        'type' => 'string',
+        'weight' => -6,
+      ])
+      ->setDisplayConfigurable('view', TRUE);
+
+    // Agency Name.
+    $fields['agency'] = BaseFieldDefinition::create('string')
+      ->setLabel(t('Agency Name'))
+      ->setDescription(t('The name of the agency.'))
+      ->setRequired(FALSE)
+      ->setSetting('max_length', 255)
+      ->setDisplayOptions('form', [
+        'type' => 'string_textfield',
+        'weight' => -5,
+      ])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayOptions('view', [
+        'label' => 'above',
+        'type' => 'string',
+        'weight' => -5,
+      ])
+      ->setDisplayConfigurable('view', TRUE);
 
     $fields['agency_id'] = BaseFieldDefinition::create('entity_reference')
       ->setLabel(t('Agency'))
@@ -87,7 +174,7 @@ final class Appointment extends ContentEntityBase implements AppointmentInterfac
       ->setRequired(TRUE)
       ->setDisplayOptions('form', [
         'type' => 'entity_reference_autocomplete', // Use an autocomplete widget.
-        'weight' => -10,
+        'weight' => -9,
         'settings' => [
           'match_operator' => 'CONTAINS',
           'size' => 60,
@@ -98,7 +185,7 @@ final class Appointment extends ContentEntityBase implements AppointmentInterfac
       ->setDisplayOptions('view', [
         'label' => 'above',
         'type' => 'entity_reference_label',
-        'weight' => -10,
+        'weight' => -9,
       ])
       ->setDisplayConfigurable('view', TRUE);
 
@@ -147,10 +234,10 @@ final class Appointment extends ContentEntityBase implements AppointmentInterfac
       ])
       ->setDisplayConfigurable('view', TRUE);
 
-    // Appointment Date and Time.
-    $fields['appointment_date'] = BaseFieldDefinition::create('datetime')
-      ->setLabel(t('Appointment Date'))
-      ->setDescription(t('The date and time of the appointment.'))
+    // Appointment Start Date and Time.
+    $fields['start_date'] = BaseFieldDefinition::create('datetime')
+      ->setLabel(t('Appointment Start Date'))
+      ->setDescription(t('The Start date and time of the appointment.'))
       ->setRequired(TRUE)
       ->setDisplayOptions('form', [
         'type' => 'datetime_default',
@@ -164,71 +251,89 @@ final class Appointment extends ContentEntityBase implements AppointmentInterfac
       ])
       ->setDisplayConfigurable('view', TRUE);
 
-    // First Name.
-    $fields['first_name'] = BaseFieldDefinition::create('string')
-      ->setLabel(t('First Name'))
-      ->setDescription(t('The first name of the user.'))
+    // Appointment Date and Time.
+    $fields['end_date'] = BaseFieldDefinition::create('datetime')
+      ->setLabel(t('Appointment End Date'))
+      ->setDescription(t('The End date and time of the appointment.'))
       ->setRequired(TRUE)
       ->setDisplayOptions('form', [
-        'type' => 'string_textfield',
+        'type' => 'datetime_default',
         'weight' => -6,
       ])
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayOptions('view', [
         'label' => 'above',
-        'type' => 'string',
+        'type' => 'datetime_default',
         'weight' => -6,
+      ])
+      ->setDisplayConfigurable('view', TRUE);
+
+
+    // First Name.
+    $fields['first_name'] = BaseFieldDefinition::create('string')
+      ->setLabel(t('First Name'))
+      ->setDescription(t('The first name of the user who create the appointment.'))
+      ->setRequired(TRUE)
+      ->setDisplayOptions('form', [
+        'type' => 'string_textfield',
+        'weight' => -5,
+      ])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayOptions('view', [
+        'label' => 'above',
+        'type' => 'string',
+        'weight' => -5,
       ])
       ->setDisplayConfigurable('view', TRUE);
 
     // Last Name.
     $fields['last_name'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Last Name'))
-      ->setDescription(t('The last name of the user.'))
+      ->setDescription(t('The last name of the user who create the appointment.'))
       ->setRequired(TRUE)
       ->setDisplayOptions('form', [
         'type' => 'string_textfield',
-        'weight' => -5,
+        'weight' => -4,
       ])
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayOptions('view', [
         'label' => 'above',
         'type' => 'string',
-        'weight' => -5,
+        'weight' => -4,
       ])
       ->setDisplayConfigurable('view', TRUE);
 
     // Email.
     $fields['email'] = BaseFieldDefinition::create('email')
       ->setLabel(t('Email'))
-      ->setDescription(t('The email of the user.'))
+      ->setDescription(t('The email of the user who create the appointment.'))
       ->setRequired(TRUE)
       ->setDisplayOptions('form', [
         'type' => 'email_default',
-        'weight' => -4,
+        'weight' => -3,
       ])
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayOptions('view', [
         'label' => 'above',
         'type' => 'email_mailto',
-        'weight' => -4,
+        'weight' => -3,
       ])
       ->setDisplayConfigurable('view', TRUE);
 
     // Phone.
     $fields['phone'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Phone'))
-      ->setDescription(t('The phone number of the user.'))
+      ->setDescription(t('The phone number of the user who create the appointment.'))
       ->setRequired(TRUE)
       ->setDisplayOptions('form', [
         'type' => 'string_textfield',
-        'weight' => -3,
+        'weight' => -2,
       ])
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayOptions('view', [
         'label' => 'above',
         'type' => 'string',
-        'weight' => -3,
+        'weight' => -2,
       ])
       ->setDisplayConfigurable('view', TRUE);
 
@@ -238,29 +343,13 @@ final class Appointment extends ContentEntityBase implements AppointmentInterfac
       ->setDefaultValue('available')
       ->setDisplayOptions('form', [
         'type' => 'string_textfield',
-        'weight' => -2,
+        'weight' => -1,
       ])
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayOptions('view', [
         'label' => 'above',
         'type' => 'string',
-        'weight' => -2,
-      ])
-      ->setDisplayConfigurable('view', TRUE);
-
-    $fields['label'] = BaseFieldDefinition::create('string')
-      ->setLabel(t('Label'))
-      ->setRequired(TRUE)
-      ->setSetting('max_length', 255)
-      ->setDisplayOptions('form', [
-        'type' => 'string_textfield',
-        'weight' => -5,
-      ])
-      ->setDisplayConfigurable('form', TRUE)
-      ->setDisplayOptions('view', [
-        'label' => 'hidden',
-        'type' => 'string',
-        'weight' => -5,
+        'weight' => -1,
       ])
       ->setDisplayConfigurable('view', TRUE);
 
@@ -286,19 +375,19 @@ final class Appointment extends ContentEntityBase implements AppointmentInterfac
       ])
       ->setDisplayConfigurable('view', TRUE);
 
-    $fields['description'] = BaseFieldDefinition::create('text_long')
-      ->setLabel(t('Description'))
-      ->setDisplayOptions('form', [
-        'type' => 'text_textarea',
-        'weight' => 10,
-      ])
-      ->setDisplayConfigurable('form', TRUE)
-      ->setDisplayOptions('view', [
-        'type' => 'text_default',
-        'label' => 'above',
-        'weight' => 10,
-      ])
-      ->setDisplayConfigurable('view', TRUE);
+    //    $fields['description'] = BaseFieldDefinition::create('text_long')
+    //      ->setLabel(t('Description'))
+    //      ->setDisplayOptions('form', [
+    //        'type' => 'text_textarea',
+    //        'weight' => 10,
+    //      ])
+    //      ->setDisplayConfigurable('form', TRUE)
+    //      ->setDisplayOptions('view', [
+    //        'type' => 'text_default',
+    //        'label' => 'above',
+    //        'weight' => 10,
+    //      ])
+    //      ->setDisplayConfigurable('view', TRUE);
 
     // Add the uid field (reference to the User entity).
     $fields['uid'] = BaseFieldDefinition::create('entity_reference')
@@ -323,6 +412,22 @@ final class Appointment extends ContentEntityBase implements AppointmentInterfac
       ])
       ->setDisplayConfigurable('view', TRUE);
 
+    $fields['label'] = BaseFieldDefinition::create('string')
+      ->setLabel(t('Label'))
+      ->setRequired(TRUE)
+      ->setSetting('max_length', 255)
+      ->setDisplayOptions('form', [
+        'type' => '',
+        'weight' => -5,
+      ])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayOptions('view', [
+        'label' => 'hidden',
+        'type' => 'string',
+        'weight' => -5,
+      ])
+      ->setDisplayConfigurable('view', TRUE);
+
     $fields['created'] = BaseFieldDefinition::create('created')
       ->setLabel(t('Authored on'))
       ->setDescription(t('The time that the appointment was created.'))
@@ -342,7 +447,8 @@ final class Appointment extends ContentEntityBase implements AppointmentInterfac
       ->setLabel(t('Changed'))
       ->setDescription(t('The time that the appointment was last edited.'));
 
-
     return $fields;
   }
 }
+
+

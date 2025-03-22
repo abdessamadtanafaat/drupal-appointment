@@ -7,14 +7,14 @@
       $(once('initializeFullCalendar', '#calendar', context)).each(function () {
         var calendarEl = document.getElementById('calendar');
 
-        // Get the tempstore values from Drupal settings.
+        // Get the latest values from drupalSettings.
         var agency_id = settings.appointment.agency_id;
         var appointment_type_id = settings.appointment.appointment_type_id;
         var appointment_type_name = settings.appointment.appointment_type_name;
         var advisor_id = settings.appointment.advisor_id;
 
-        // Log the tempstore values for debugging.
-        console.log('Tempstore values:', {
+        // Log the latest values for debugging.
+        console.log('Latest tempstore values:', {
           agency_id: agency_id,
           appointment_type_id: appointment_type_id,
           advisor_id: advisor_id,

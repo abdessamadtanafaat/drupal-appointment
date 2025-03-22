@@ -52,8 +52,13 @@ class BookingForm extends FormBase {
    * Builds the form dynamically based on the current step.
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    // Get current step, defaulting to step 1.
 
+    // Clear the tempStore when starting a new appointment.
+    if (!$form_state->get('step')) {
+      $this->clearTempStore();
+    }
+
+    // Get current step, defaulting to step 1.
     $step = $form_state->get('step') ?? 1;
 
     // Wrapper for AJAX updates.
@@ -314,19 +319,23 @@ class BookingForm extends FormBase {
     $form['#prefix'] = '<div id="booking-form-wrapper">';
     $form['#suffix'] = '</div>';
 
-    // Attach the FullCalendar library.
-    $form['#attached']['library'][] = 'appointment/calendar_scripts';
-
     // Retrieve the appointment data from tempstore.
     $values = $this->tempStore->get('values') ?? [];
 
-    // Pass the tempstore data to JavaScript.
+
+    // Attach the updated values to drupalSettings.
     $form['#attached']['drupalSettings']['appointment'] = [
-      'agency_id' => $values['agency_id'] ?? null,
-      'appointment_type_id' => $values['appointment_type_id'] ?? null,
-      'appointment_type_name' => $values['appointment_type_name'] ?? null,
-      'advisor_id' => $values['advisor_id'] ?? null,
+      'agency_id' => $values['agency_id'] ?? NULL,
+      'appointment_type_id' => $values['appointment_type_id'] ?? NULL,
+      'appointment_type_name' => $values['appointment_type_name'] ?? NULL,
+      'advisor_id' => $values['advisor_id'] ?? NULL,
     ];
+
+    // Attach the FullCalendar library.
+    $form['#attached']['library'][] = 'appointment/calendar_scripts';
+
+
+    \Drupal::logger('advisors')->notice('updated Values f step 4: ' . print_r($values, TRUE));
 
 
     // Add the introductory text.
@@ -590,33 +599,22 @@ class BookingForm extends FormBase {
     // Retrieve existing values from tempStore.
     $values = $this->tempStore->get('values') ?? [];
 
-    // Save form values to tempStore only if the field is not already set to avoid bieng null !
-    if (empty($values['agency_id'])) {
-      $values['agency_id'] = $form_state->getValue('agency_id');
-    }
-    if (empty($values['appointment_type_id'])) {
-      $values['appointment_type_id'] = $form_state->getValue('appointment_type_id');
-    }
-
-    if (empty($values['appointment_type_name'])) {
-      $values['appointment_type_name'] = $form_state->getValue('appointment_type_name');
-    }
-
-    if (empty($values['advisor_id'])) {
-      $values['advisor_id'] = $form_state->getValue('advisor_id');
-    }
-
-    $values['first_name'] = $form_state->getValue('first_name');
-    $values['last_name'] = $form_state->getValue('last_name');
-    $values['phone'] = $form_state->getValue('phone');
-    $values['email'] = $form_state->getValue('email');
-    $values['terms'] = $form_state->getValue('terms');
+    // Save form values to tempStore.
+    $values['agency_id'] = $form_state->getValue('agency_id') ?? $values['agency_id'];
+    $values['appointment_type_id'] = $form_state->getValue('appointment_type_id') ?? $values['appointment_type_id'];
+    $values['appointment_type_name'] = $form_state->getValue('appointment_type_name') ?? $values['appointment_type_name'];
+    $values['advisor_id'] = $form_state->getValue('advisor_id') ?? $values['advisor_id'];
+    $values['first_name'] = $form_state->getValue('first_name') ?? $values['first_name'];
+    $values['last_name'] = $form_state->getValue('last_name') ?? $values['last_name'];
+    $values['phone'] = $form_state->getValue('phone') ?? $values['phone'];
+    $values['email'] = $form_state->getValue('email') ?? $values['email'];
+    $values['terms'] = $form_state->getValue('terms') ?? $values['terms'];
 
     // Save updated values to tempStore.
     $this->tempStore->set('values', $values);
 
-    // Log the values for debugging.
-    \Drupal::logger('appointment')->notice('TempStore Values: ' . print_r($values, TRUE));
+    // Log the updated values for debugging.
+    \Drupal::logger('appointment')->notice('Updated TempStore Values: ' . print_r($values, TRUE));
 
     // Move to the next step.
     $nextStep = $currentStep + 1;
@@ -628,7 +626,6 @@ class BookingForm extends FormBase {
     // Rebuild the form.
     $form_state->setRebuild(TRUE);
   }
-
   /**
    * Moves to the previous step.
    */
@@ -723,6 +720,8 @@ class BookingForm extends FormBase {
 
   // not knowing the css !
   public function submitForm(array &$form, FormStateInterface $form_state) {
+
+
     // Retrieve the appointment data from tempStore.
     $values = $this->tempStore->get('values') ?? [];
 
@@ -735,8 +734,8 @@ class BookingForm extends FormBase {
     // Display a success message.
     \Drupal::messenger()->addMessage($this->t('The appointment is saved.'));
 
-//    // Optionally, clear the tempstore after saving.
-//    $this->tempStore->delete('values');
+    // Clear the tempstore after saving.
+    $this->clearTempStore();
 
     // Define the path to the image.
     $image_path = base_path() . \Drupal::service('extension.list.module')->getPath('appointment') . '/assets/calendar-success.png';
@@ -914,13 +913,101 @@ class BookingForm extends FormBase {
     // Get the current user ID.
     $uid = \Drupal::currentUser()->id();
 
+
+    // Ensure the start_date and end_date are in the correct format (ISO 8601).
+    $start_date = !empty($values['selected_slot']['start']) ? $values['selected_slot']['start'] : '';
+    $end_date = !empty($values['selected_slot']['end']) ? $values['selected_slot']['end'] : '';
+
+    // Fetch the advisor's name based on advisor_id.
+    $advisor_id = $values['advisor_id'] ?? NULL;
+    $advisor_name = '';
+    if ($advisor_id) {
+      \Drupal::logger('appointment')->notice('Loading advisor with ID: ' . $advisor_id);
+
+      // Load the advisor's name from the users_field_data table.
+      $query = \Drupal::database()->select('users_field_data', 'u');
+      $query->fields('u', ['name']);
+      $query->condition('u.uid', $advisor_id);
+      $advisor_name = $query->execute()->fetchField();
+
+      if ($advisor_name) {
+        \Drupal::logger('appointment')->notice('Advisor Name: ' . $advisor_name);
+      } else {
+        \Drupal::logger('appointment')->error('Failed to load advisor with ID: ' . $advisor_id);
+      }
+    } else {
+      \Drupal::logger('appointment')->error('Advisor ID is not set.');
+    }
+
+    // Fetch the agency name based on agency_id.
+    $agency_id = $values['agency_id'] ?? NULL;
+    $agency_name = '';
+    if ($agency_id) {
+      \Drupal::logger('appointment')->notice('Loading agency with ID: ' . $agency_id);
+
+      // Load the agency's name from the appointment_agency table.
+      $query = \Drupal::database()->select('appointment_agency', 'a');
+      $query->fields('a', ['name']);
+      $query->condition('a.id', $agency_id);
+      $agency_name = $query->execute()->fetchField();
+
+      if ($agency_name) {
+        \Drupal::logger('appointment')->notice('Agency Name: ' . $agency_name);
+      } else {
+        \Drupal::logger('appointment')->error('Failed to load agency with ID: ' . $agency_id);
+      }
+    } else {
+      \Drupal::logger('appointment')->error('Agency ID is not set.');
+    }
+
+    // Fetch the appointment type name based on appointment_type.
+    $appointment_type_id = $values['appointment_type_id'] ?? NULL;
+    $appointment_type_name = '';
+    if ($appointment_type_id) {
+      \Drupal::logger('appointment')->notice('Loading appointment type with ID: ' . $appointment_type_id);
+
+      // Load the appointment type name from the taxonomy_term_field_data table.
+      $query = \Drupal::database()->select('taxonomy_term_field_data', 't');
+      $query->fields('t', ['name']);
+      $query->condition('t.tid', $appointment_type_id);
+      $appointment_type_name = $query->execute()->fetchField();
+
+      if ($appointment_type_name) {
+        \Drupal::logger('appointment')->notice('Appointment Type Name: ' . $appointment_type_name);
+      } else {
+        \Drupal::logger('appointment')->error('Failed to load appointment type with ID: ' . $appointment_type_id);
+      }
+    } else {
+      \Drupal::logger('appointment')->error('Appointment Type ID is not set.');
+    }
+
+    // Format the description as "Appointment - 2025-03-24 - 09:00 to 09:30".
+    $description = '';
+    if ($start_date && $end_date) {
+      $start_date_formatted = \Drupal::service('date.formatter')->format(strtotime($start_date), 'custom', 'Y-m-d');
+      $start_time_formatted = \Drupal::service('date.formatter')->format(strtotime($start_date), 'custom', 'H:i');
+      $end_time_formatted = \Drupal::service('date.formatter')->format(strtotime($end_date), 'custom', 'H:i');
+      $description = t('Appointment - @date - @start_time to @end_time', [
+        '@date' => $start_date_formatted,
+        '@start_time' => $start_time_formatted,
+        '@end_time' => $end_time_formatted,
+      ]);
+    }
+
+
+
     // Prepare the data for insertion.
     $fields = [
       'uuid' => $uuid, // Generate a UUID.
-      'agency_id' => $values['agency_id'] ?? NULL,
-      'appointment_type' => $values['appointment_type_id'] ?? NULL,
-      'advisor_id' => $values['advisor_id'] ?? NULL,
-      'appointment_date' => $values['selected_slot']['start'] ?? NULL, // Use the start time of the selected slot.
+      'agency_id' => $agency_id,
+      'agency' => $agency_name, // Store the agency name.
+      'appointment_type' => $appointment_type_id,
+      'appointment_type_name' => $appointment_type_name, // Store the appointment type name.
+      'description'=>$description,
+      'advisor_id' => $advisor_id,
+      'advisor' => $advisor_name, // Store the advisor name.
+      'start_date' => $start_date, // Start date and time in ISO 8601 format.
+      'end_date' => $end_date, // End date and time in ISO 8601 format.
       'first_name' => $values['first_name'] ?? NULL,
       'last_name' => $values['last_name'] ?? NULL,
       'email' => $values['email'] ?? NULL,
@@ -928,8 +1015,8 @@ class BookingForm extends FormBase {
       'appointment_status' => 'pending', // Default status.
       'label' => $values['selected_slot']['title'] ?? NULL, // Use the title of the selected slot.
       'status' => 1, // Default status (active).
-      'description__value' => '', // Empty description.
-      'description__format' => 'basic_html', // Default format.
+      //'description__value' => $description, // Auto-generated description.
+      //'description__format' => 'basic_html', // Default format.
       'uid' => $uid, // Current user ID.
       'created' => \Drupal::time()->getRequestTime(), // Current timestamp.
       'changed' => \Drupal::time()->getRequestTime(), // Current timestamp.
@@ -947,6 +1034,10 @@ class BookingForm extends FormBase {
       // Log the error if the insertion fails.
       \Drupal::logger('appointment')->error('Failed to save appointment: ' . $e->getMessage());
     }
+  }
+
+  protected function clearTempStore() {
+    $this->tempStore->delete('values');
   }
 
 }

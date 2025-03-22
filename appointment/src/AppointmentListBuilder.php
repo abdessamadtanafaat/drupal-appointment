@@ -35,7 +35,7 @@ final class AppointmentListBuilder extends EntityListBuilder {
     $row['description'] = $entity->get('description')->value;
 
     // Date.
-    $row['date'] = $entity->get('appointment_date')->value;
+    $row['date'] = $entity->get('start_date')->value;
 
     // Agency (name).
     $agency = $entity->get('agency_id')->entity;

@@ -139,7 +139,6 @@ function _appointment_create_appointment_types_terms() {
   $terms = [
     ['name' => 'Business Appointment', 'vid' => 'appointment_types'],
     ['name' => 'Professional Staff', 'vid' => 'appointment_types'],
-    ['name' => 'Follow-up', 'vid' => 'appointment_types'],
   ];
 
   // Create example terms if they don't already exist.
