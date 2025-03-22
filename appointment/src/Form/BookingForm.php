@@ -164,20 +164,6 @@ class BookingForm extends FormBase {
       '#markup' => '<div class="intro-text"><h3>' . $this->t('Start now, book your appointment') . '</h3></div>',
     ];
 
-    $values = $this->tempStore->get('values') ?? [];
-
-    // Retrieve the agency ID from tempStore.
-    $agencyId = $form_state->getValue('agency_id');
-    $this->tempStore->set('agency_id', $agencyId);
-
-    \Drupal::logger('appointment')->notice('Stored Agency ID in tempstore: ' . print_r($values, TRUE));
-
-     // Add a hidden field to store the agency ID.
-    $form['agency_id'] = [
-      '#type' => 'hidden',
-      '#value' => $agencyId,
-      '#default_value' => $values['agency_id'] ?? '',
-    ];
 
     // Retrieve the list of appointment types.
     $appointment_types = $this->getAppointmentTypes();
@@ -205,6 +191,14 @@ class BookingForm extends FormBase {
       '#attributes' => [
         'name' => 'appointment_type_id',
       ],
+    ];
+
+    // Add a hidden field to store the selected appointment type name.
+    $form['appointment_type_name'] = [
+      '#type' => 'hidden',
+      '#attributes' => [
+        'name' => 'appointment_type_name',
+        ],
     ];
 
     // Navigation buttons.
@@ -251,34 +245,6 @@ class BookingForm extends FormBase {
     // Add the introductory text.
     $form['intro_text'] = [
       '#markup' => '<div class="intro-text"><h3>' . $this->t('Select your advisor') . '</h3></div>',
-    ];
-
-    $values = $this->tempStore->get('values') ?? [];
-
-    // Retrieve the agency ID from tempStore.
-    $appointment_type_id = $form_state->getValue('appointment_type_id');
-    $this->tempStore->set('appointment_type_id', $appointment_type_id);
-
-    \Drupal::logger('appointment')->notice('Stored Agency ID in tempstore: ' . $appointment_type_id);
-
-    // Add a hidden field to store the agency ID.
-    $form['agency_id'] = [
-      '#type' => 'hidden',
-      '#value' => $appointment_type_id,
-      '#default_value' => $values['appointment_type_id'] ?? '',
-    ];
-
-    // Retrieve the appointment Type  ID from tempStore.
-    $appointmentTypeID = $form_state->getValue('agency_id');
-    $this->tempStore->set('appointment_type_id', $appointmentTypeID);
-
-    \Drupal::logger('appointment')->notice('Stored Appointment Type ID in tempstore: ' . print_r($values, TRUE));
-
-    // Add a hidden field to store the agency ID.
-    $form['appointment_type_id'] = [
-      '#type' => 'hidden',
-      '#value' => $appointmentTypeID,
-      '#default_value' => $values['appointment_type_id'] ?? '',
     ];
 
     // Retrieve the list of advisors.
@@ -354,16 +320,11 @@ class BookingForm extends FormBase {
     // Retrieve the appointment data from tempstore.
     $values = $this->tempStore->get('values') ?? [];
 
-//    \Drupal::logger('appointment')->notice('Stored Advisor ID in tempstore: ' . $advisor_id);
-
-
-    // Log the advisor ID for debugging.
-//    \Drupal::logger('appointment')->notice('Retrieved Advisor ID from tempstore: ' . $advisor_id);
-
     // Pass the tempstore data to JavaScript.
     $form['#attached']['drupalSettings']['appointment'] = [
       'agency_id' => $values['agency_id'] ?? null,
       'appointment_type_id' => $values['appointment_type_id'] ?? null,
+      'appointment_type_name' => $values['appointment_type_name'] ?? null,
       'advisor_id' => $values['advisor_id'] ?? null,
     ];
 
@@ -564,6 +525,7 @@ class BookingForm extends FormBase {
 
     // Prepare appointment details for the Twig template.
     $appointment_details_confirmation = [
+      'appointment_type_name' => $values['appointment_type_name'] ?? '',
       'date' => $appointment_details['date'] ?? 'N/A',
       'time' => $appointment_details['time'] ?? 'N/A',
       'first_name' => $values['first_name'] ?? '',
@@ -628,9 +590,6 @@ class BookingForm extends FormBase {
     // Retrieve existing values from tempStore.
     $values = $this->tempStore->get('values') ?? [];
 
-    \Drupal::logger('appointment')->notice('id 9bel man3awed nsaver : ' . print_r($values, TRUE));
-
-
     // Save form values to tempStore only if the field is not already set to avoid bieng null !
     if (empty($values['agency_id'])) {
       $values['agency_id'] = $form_state->getValue('agency_id');
@@ -638,10 +597,14 @@ class BookingForm extends FormBase {
     if (empty($values['appointment_type_id'])) {
       $values['appointment_type_id'] = $form_state->getValue('appointment_type_id');
     }
+
+    if (empty($values['appointment_type_name'])) {
+      $values['appointment_type_name'] = $form_state->getValue('appointment_type_name');
+    }
+
     if (empty($values['advisor_id'])) {
       $values['advisor_id'] = $form_state->getValue('advisor_id');
     }
-
 
     $values['first_name'] = $form_state->getValue('first_name');
     $values['last_name'] = $form_state->getValue('last_name');
@@ -808,6 +771,8 @@ class BookingForm extends FormBase {
     // Build an options array from the terms.
     foreach ($terms as $term) {
       $appointmentTypes[$term->tid] = $term->name;
+      $appointmentTypes[$term->tid] = $term->name;
+
     }
 
     return $appointmentTypes;

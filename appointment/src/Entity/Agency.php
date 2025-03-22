@@ -99,17 +99,17 @@ final class Agency extends ContentEntityBase implements AgencyInterface {
       ->setDisplayConfigurable('view', TRUE);
 
     // Description of the agency.
-    $fields['description'] = BaseFieldDefinition::create('text_long')
+    $fields['description'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Description'))
       ->setDescription(t('A description of the agency.'))
       ->setDisplayOptions('form', [
-        'type' => 'text_textarea',
+        'type' => 'string_textfield',
         'weight' => -9,
       ])
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayOptions('view', [
         'label' => 'above',
-        'type' => 'text_default',
+        'type' => 'string',
         'weight' => -9,
       ])
       ->setDisplayConfigurable('view', TRUE);
@@ -136,21 +136,6 @@ final class Agency extends ContentEntityBase implements AgencyInterface {
         'weight' => -5,
       ])
       ->setDisplayConfigurable('view', TRUE);
-
-//    $fields['working_hours'] = BaseFieldDefinition::create('string_long')
-//      ->setLabel(t('Working Hours'))
-//      ->setDescription(t('The working hours of the advisor in JSON format.'))
-//      ->setDisplayOptions('form', [
-//        'type' => 'string_textarea',
-//        'weight' => -4,
-//      ])
-//      ->setDisplayConfigurable('form', TRUE)
-//      ->setDisplayOptions('view', [
-//        'label' => 'above',
-//        'type' => 'string',
-//        'weight' => -4,
-//      ])
-//      ->setDisplayConfigurable('view', TRUE);
 
     // Add the working hours field.
     $fields['working_hours'] = BaseFieldDefinition::create('office_hours')
@@ -204,20 +189,6 @@ final class Agency extends ContentEntityBase implements AgencyInterface {
         'settings' => [
           'format' => 'enabled-disabled',
         ],
-      ])
-      ->setDisplayConfigurable('view', TRUE);
-
-    $fields['description'] = BaseFieldDefinition::create('text_long')
-      ->setLabel(t('Description'))
-      ->setDisplayOptions('form', [
-        'type' => 'text_textarea',
-        'weight' => 10,
-      ])
-      ->setDisplayConfigurable('form', TRUE)
-      ->setDisplayOptions('view', [
-        'type' => 'text_default',
-        'label' => 'above',
-        'weight' => 10,
       ])
       ->setDisplayConfigurable('view', TRUE);
 

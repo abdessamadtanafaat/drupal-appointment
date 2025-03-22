@@ -78,6 +78,7 @@ class AppointmentController extends ControllerBase {
 
     $values['agency_id'] = $data['agency_id'];
     $values['appointment_type_id'] = $data['appointment_type_id'];
+    $values['appointment_type_name'] = $data['appointment_type_name'];
     $values['advisor_id'] = $data['advisor_id'];
 
     // Save the updated appointment data to tempstore.

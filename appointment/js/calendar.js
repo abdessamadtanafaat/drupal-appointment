@@ -10,6 +10,7 @@
         // Get the tempstore values from Drupal settings.
         var agency_id = settings.appointment.agency_id;
         var appointment_type_id = settings.appointment.appointment_type_id;
+        var appointment_type_name = settings.appointment.appointment_type_name;
         var advisor_id = settings.appointment.advisor_id;
 
         // Log the tempstore values for debugging.
@@ -17,6 +18,7 @@
           agency_id: agency_id,
           appointment_type_id: appointment_type_id,
           advisor_id: advisor_id,
+          appointment_type_name: appointment_type_name,
         });
 
         // Initialize the calendar using the browser global method.
@@ -72,6 +74,7 @@
                 data: JSON.stringify({ // Ensure the data is sent as JSON.
                   agency_id: agency_id,
                   appointment_type_id: appointment_type_id,
+                  appointment_type_name: appointment_type_name,
                   advisor_id: advisor_id,
                   start: info.startStr,
                   end: info.endStr,

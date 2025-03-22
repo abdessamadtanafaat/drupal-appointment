@@ -42,6 +42,9 @@ function appointment_uninstall() {
   // Remove working hours field.
   _working_hours_delete();
 
+  // Delete the 'Appointment Types' vocabulary and its terms.
+  _appointment_delete_appointment_types_vocabulary();
+
 }
 
 /**
@@ -134,8 +137,8 @@ function _appointment_create_appointment_types_vocabulary() {
 function _appointment_create_appointment_types_terms() {
   // Define example terms for the vocabulary.
   $terms = [
-    ['name' => 'Consultation', 'vid' => 'appointment_types'],
-    ['name' => 'Meeting', 'vid' => 'appointment_types'],
+    ['name' => 'Business Appointment', 'vid' => 'appointment_types'],
+    ['name' => 'Professional Staff', 'vid' => 'appointment_types'],
     ['name' => 'Follow-up', 'vid' => 'appointment_types'],
   ];
 
@@ -303,4 +306,34 @@ if ($field = FieldConfig::loadByName($entity_type, 'user', $field_name)) {
 if ($storage = FieldStorageConfig::loadByName($entity_type, $field_name)) {
   $storage->delete();
 }
+}
+
+/**
+ * Deletes the 'Appointment Types' vocabulary and its terms.
+ */
+function _appointment_delete_appointment_types_vocabulary() {
+  // Load the vocabulary.
+  $vocabulary = \Drupal\taxonomy\Entity\Vocabulary::load('appointment_types');
+
+  if ($vocabulary) {
+    // Load all terms in the vocabulary.
+    $terms = \Drupal::entityTypeManager()
+      ->getStorage('taxonomy_term')
+      ->loadByProperties(['vid' => 'appointment_types']);
+
+    // Delete all terms in the vocabulary.
+    foreach ($terms as $term) {
+      $term->delete();
+      \Drupal::logger('appointment')->notice('Deleted taxonomy term: @term.', [
+        '@term' => $term->label(),
+      ]);
+    }
+
+    // Delete the vocabulary.
+    $vocabulary->delete();
+    \Drupal::logger('appointment')->notice('Deleted taxonomy vocabulary: Appointment Types.');
+  } else {
+    // Log that the vocabulary does not exist.
+    \Drupal::logger('appointment')->notice('Taxonomy vocabulary "Appointment Types" does not exist.');
+  }
 }

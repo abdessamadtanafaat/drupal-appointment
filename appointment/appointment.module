@@ -17,6 +17,7 @@ function appointment_theme() {
       'variables' => [
         'appointment_type' => NULL,
         'appointment_type_id' => NULL,
+        'appointment_type_name' => NULL,
       ],
       'template' => 'appointment-type-card',
     ],
