@@ -4,8 +4,8 @@ This is a custom Drupal module that allows users to manage appointments.
 
 ## Features
 
-- List all appointments
 - Book an appointment
+- List all appointments
 - Manage appointment settings
 
 ## Installation

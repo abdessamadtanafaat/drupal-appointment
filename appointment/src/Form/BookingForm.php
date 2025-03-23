@@ -53,13 +53,15 @@ class BookingForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
 
+    // Get current step, defaulting to step 1.
+    $step = $form_state->get('step') ?? 1;
+
+    \Drupal::logger('appointment')->notice('Building form for step: ' . $step); // Log the current step.
+
     // Clear the tempStore when starting a new appointment.
     if (!$form_state->get('step')) {
       $this->clearTempStore();
     }
-
-    // Get current step, defaulting to step 1.
-    $step = $form_state->get('step') ?? 1;
 
     // Wrapper for AJAX updates.
     $form['#prefix'] = '<div id="booking-form-wrapper">';
@@ -149,6 +151,7 @@ class BookingForm extends FormBase {
       ],
     ];
 
+
     return $form;
   }
   /**
@@ -173,6 +176,9 @@ class BookingForm extends FormBase {
     // Retrieve the list of appointment types.
     $appointment_types = $this->getAppointmentTypes();
 
+    // Define the path to the image.
+    $image_path = base_path() . \Drupal::service('extension.list.module')->getPath('appointment') . '/assets/file.png';
+
     // Loop through the appointment types and prepare them for rendering as cards.
     $appointment_type_cards = [];
     foreach ($appointment_types as $id => $label) {
@@ -180,6 +186,7 @@ class BookingForm extends FormBase {
         '#theme' => 'appointment_type_card',
         '#appointment_type' => $label,
         '#appointment_type_id' => $id,
+        '#image_path' => $image_path,
       ];
     }
 
@@ -257,6 +264,9 @@ class BookingForm extends FormBase {
 
     \Drupal::logger('advisors')->notice('Advisors Values: ' . print_r($advisors, TRUE));
 
+    // Define the path to the image.
+    $image_path = base_path() . \Drupal::service('extension.list.module')->getPath('appointment') . '/assets/user.png';
+
     // Loop through the appointment types and prepare them for rendering as cards.
     $advisors_cards = [];
     foreach ($advisors as $id => $user) {
@@ -264,6 +274,7 @@ class BookingForm extends FormBase {
         '#theme' => 'advisor_card',
         '#advisor' => $user,
         '#advisor_id' => $id,
+        '#image_path'=>$image_path,
       ];
     }
 
@@ -586,9 +597,10 @@ class BookingForm extends FormBase {
    * Updates the form dynamically using AJAX.
    */
   public function updateFormStep(array $form, FormStateInterface $form_state) {
+    \Drupal::logger('appointment')->notice('updateFormStep method triggered.'); // Log to confirm the method is called.
+
     return $form;
   }
-
 
   /**
    * Moves to the next step.
@@ -631,8 +643,28 @@ class BookingForm extends FormBase {
    * Moves to the previous step.
    */
   public function prevStep(array &$form, FormStateInterface $form_state) {
-    $form_state->set('step', $form_state->get('step') - 1);
+    // Retrieve existing values from tempStore.
+    $values = $this->tempStore->get('values') ?? [];
+
+    // Log the tempStore values before decrementing the step.
+    \Drupal::logger('appointment')->notice('TempStore values before decrementing step: ' . print_r($values, TRUE));
+
+    // Decrement the step.
+    $currentStep = $form_state->get('step') ?? 1;
+    $previousStep = $currentStep - 1;
+    $previousStep = max(1, $previousStep);
+
+    // Log the previous step.
+    \Drupal::logger('appointment')->notice('Moving to previous step: ' . $previousStep);
+
+    // Set the new step in the form state.
+    $form_state->set('step', $previousStep);
+
+    // Rebuild the form.
     $form_state->setRebuild(TRUE);
+
+    // Log the tempStore values after decrementing the step.
+    \Drupal::logger('appointment')->notice('TempStore values after decrementing step: ' . print_r($this->tempStore->get('values'), TRUE));
   }
 
   /**

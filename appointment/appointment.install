@@ -83,7 +83,7 @@ function _appointment_assign_advisor_role() {
 
   // Query users with a specific email domain (e.g., '@example.com').
   $query = $user_storage->getQuery()
-//    ->condition('mail', '%@void.com', 'LIKE') // Replace with your domain.
+    ->condition('mail', '%@void.com', 'LIKE') // Replace with your domain.
     ->condition('status', 1) // Only active users.
     ->accessCheck(TRUE); // Explicitly enable access checking.
 
@@ -174,9 +174,9 @@ function _appointment_create_advisor_user() {
   $user = \Drupal\user\Entity\User::create();
 
   // Set the user's properties.
-  $user->setUsername('advisor_void'); // Username for the advisor.
+  $user->setUsername('mohammed'); // Username for the advisor.
   $user->setPassword('void2015'); // Set a secure password.
-  $user->setEmail('void@gmail.com'); // Email address for the advisor.
+  $user->setEmail('void@void.com'); // Email address for the advisor.
   $user->activate(); // Activate the user.
 
   // Assign the 'Advisor' role to the user.
@@ -199,7 +199,7 @@ function _appointment_delete_advisor_user() {
 
   // Query for the 'Advisor' user by name or email.
   $query = $user_storage->getQuery()
-    ->condition('name', 'advisor_void') // Replace with the username of the Advisor user.
+    ->condition('name', 'mohammed') // Replace with the username of the Advisor user.
     ->accessCheck(FALSE); // Disable access checking for system operations.
 
   $uids = $query->execute();
