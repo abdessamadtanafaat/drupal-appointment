@@ -1,11 +1,11 @@
-{# Example: appointment-confirmation-message.html.twig #}
-<div class="confirmation-message">
-  <div class="confirmation-image">
-    <img src="{{ image_path }}" alt="{{ 'Success'|t }}" />
+{#appointment-confirmation-message.html.twig #}
+<div class="confirmation-message" style="text-align: center; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div class="confirmation-image" style="margin-bottom: 20px;">
+    <img src="{{ image_path }}" alt="{{ 'Success'|t }}" style="width: 100px; height: auto; display: block; margin: 0 auto;" />
   </div>
-  <h3 class="confirmation-title">{{ title }}</h3>
-  <p class="confirmation-text">{{ message }}</p>
-  <div class="confirmation-actions">
+  <h3 class="confirmation-title" style="font-size: 24px; color: #333; margin-bottom: 10px;">{{ title }}</h3>
+  <p class="confirmation-text" style="font-size: 16px; color: #007bff; margin-bottom: 20px;">{{ message }}</p>
+  <div class="confirmation-actions" style="text-align: center;">
     {{ change_button }}
   </div>
 </div>

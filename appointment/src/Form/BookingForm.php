@@ -710,14 +710,14 @@ class BookingForm extends FormBase {
   // not knowing the css !
   public function submitForm(array &$form, FormStateInterface $form_state) {
 
-    // Check if the form has already been submitted.
-    if ($form_state->get('submitted')) {
-      \Drupal::logger('appointment')->notice('Form already submitted, skipping.');
-      return;
-    }
-
-    // Mark the form as submitted.
-    $form_state->set('submitted', TRUE);
+//    // Check if the form has already been submitted.
+//    if ($form_state->get('submitted')) {
+//      \Drupal::logger('appointment')->notice('Form already submitted, skipping.');
+//      return;
+//    }
+//
+//    // Mark the form as submitted.
+//    $form_state->set('submitted', TRUE);
 
     // Retrieve the appointment data from tempStore.
     $values = $this->tempStore->get('values') ?? [];
