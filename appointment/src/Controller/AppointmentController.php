@@ -75,6 +75,8 @@ class AppointmentController extends ControllerBase {
       'title' => $data['title'],
     ];
 
+    // Add the selected datetime to the values array.
+    $values['selected_datetime'] = $data['start'] . ' to ' . $data['end'];
 
     $values['agency_id'] = $data['agency_id'];
     $values['appointment_type_id'] = $data['appointment_type_id'];
@@ -87,7 +89,7 @@ class AppointmentController extends ControllerBase {
     // Debug: Log the tempstore value to verify it was saved correctly.
     $tempstoreValue = $this->tempStore->get('values');
     \Drupal::logger('appointment')
-      ->debug('Tempstore value after saving: ' . print_r($values, TRUE));
+      ->debug('Tempstore value after saving: ' . print_r($tempstoreValue, TRUE));
 
     // Log a success message.
     \Drupal::logger('appointment')

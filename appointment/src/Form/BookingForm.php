@@ -603,6 +603,7 @@ class BookingForm extends FormBase {
     $values['agency_id'] = $form_state->getValue('agency_id') ?? $values['agency_id'];
     $values['appointment_type_id'] = $form_state->getValue('appointment_type_id') ?? $values['appointment_type_id'];
     $values['appointment_type_name'] = $form_state->getValue('appointment_type_name') ?? $values['appointment_type_name'];
+    $values['selected_datetime'] = $form_state->getValue('selected_datetime') ?? $values['selected_datetime'];
     $values['advisor_id'] = $form_state->getValue('advisor_id') ?? $values['advisor_id'];
     $values['first_name'] = $form_state->getValue('first_name') ?? $values['first_name'];
     $values['last_name'] = $form_state->getValue('last_name') ?? $values['last_name'];
@@ -643,6 +644,9 @@ class BookingForm extends FormBase {
     // Get the current step.
     $step = $form_state->get('step') ?? 1;
 
+    // Retrieve the appointment data from tempStore.
+    $values = $this->tempStore->get('values') ?? [];
+
     // Validate Step 1: Ensure a card is selected.
     if ($step === 1) {
       $agency_id = $form_state->getValue('agency_id');
@@ -680,39 +684,24 @@ class BookingForm extends FormBase {
         $form_state->setRebuild(TRUE);
       }
     }
-    // Validate Step 4: Ensure date Time is selected.
+
+    // Validate Step 4: Ensure a time slot is selected.
     if ($step === 4) {
-      // Retrieve the selected date and time.
+      // Retrieve the selected datetime from the form state.
       $selected_datetime = $form_state->getValue('selected_datetime');
 
-      if (!empty($selected_datetime)) {
-        // Retrieve the advisor ID from tempStore.
-        $advisor_id = $this->tempStore->get('advisor_id');
+      // If the form state doesn't have the value, check the tempstore.
+      if (empty($selected_datetime)) {
+        $selected_datetime = $values['selected_datetime'] ?? NULL;
+      }
 
-        // Load the advisor's working hours.
-        $appointment_manager = \Drupal::service('appointment.manager');
-        $working_hours = $appointment_manager->getWorkingHours($advisor_id);
+      // Log the selected time slot for debugging.
+      \Drupal::logger('appointment')->notice('Selected time slot: ' . $selected_datetime);
 
-        // Convert the selected datetime to a timestamp.
-        $selected_timestamp = strtotime($selected_datetime);
-
-        // Check if the selected time falls within the advisor's working hours.
-        $is_valid = false;
-        foreach ($working_hours as $day => $hours) {
-          foreach ($hours as $time_slot) {
-            $start_time = strtotime($time_slot['start']);
-            $end_time = strtotime($time_slot['end']);
-
-            if ($selected_timestamp >= $start_time && $selected_timestamp <= $end_time) {
-              $is_valid = true;
-              break 2;
-            }
-          }
-        }
-
-        if (!$is_valid) {
-          $form_state->setErrorByName('selected_datetime', $this->t('The selected time is not within the advisor\'s working hours.'));
-        }
+      // Check if selected_datetime is empty.
+      if (empty($selected_datetime)) {
+        // Set an error message if no time slot is selected.
+        $form_state->setErrorByName('selected_datetime', $this->t('Please select a time slot to proceed.'));
       }
     }
   }
@@ -721,6 +710,14 @@ class BookingForm extends FormBase {
   // not knowing the css !
   public function submitForm(array &$form, FormStateInterface $form_state) {
 
+    // Check if the form has already been submitted.
+    if ($form_state->get('submitted')) {
+      \Drupal::logger('appointment')->notice('Form already submitted, skipping.');
+      return;
+    }
+
+    // Mark the form as submitted.
+    $form_state->set('submitted', TRUE);
 
     // Retrieve the appointment data from tempStore.
     $values = $this->tempStore->get('values') ?? [];
