@@ -23,6 +23,7 @@
 
         // Initialize the calendar using the browser global method.
         var calendar = new FullCalendar.Calendar(calendarEl, {
+
           initialView: 'timeGridWeek', // Default view
           headerToolbar: {
             left: 'prev,next today',
@@ -34,14 +35,46 @@
           validRange: {
             start: new Date(), // Disable dates/times before the current time.
           },
-          events: [
-            {
-              id: '1',
-              title: 'Available',
-              start: new Date('2025-03-20T20:30:00Z'),
-              end: new Date('2025-03-20T21:30:00Z'),
-            }
-          ],
+          events: function(fetchInfo, successCallback, failureCallback) {
+            // Make AJAX request to get appointments
+            $.ajax({
+              url: '/appointment/get-availability',
+              type: 'GET',
+              dataType: 'json',
+              success: function(response) {
+                // Transform the response to FullCalendar event objects
+                var events = response.map(function(event) {
+                  return {
+                    id: event.id,
+                    title: event.title,
+                    start: event.start,
+                    end: event.end,
+                    extendedProps: event.extendedProps,
+                    editable: false, // Ensure non-editable
+                    startEditable: false, // Cannot drag to resize start time
+                    durationEditable: false, // Cannot drag to resize duration
+                    backgroundColor: '#004ff8', // Optional: different color for non-editable events
+                    borderColor: '#0a00e3', // different border color
+                    textColor: '#ffffff', // different text color
+                  };
+                });
+                successCallback(events);
+              },
+              error: function(xhr, status, error) {
+                console.error('Failed to fetch appointments:', error);
+                failureCallback(error);
+              }
+            });
+          },
+          // events:
+          //   [
+          //   // {
+          //   //   id: '1',
+          //   //   title: 'Available',
+          //   //   start: new Date('2025-03-20T20:30:00Z'),
+          //   //   end: new Date('2025-03-20T21:30:00Z'),
+          //   // }
+          // ],
           select: function (info) {
             // Handle date selection (creating a new event).
             var title = prompt('Enter a title for the event:'); // Prompt the user for an event title.
@@ -96,6 +129,12 @@
             console.log('Date clicked: ' + info.dateStr);
           },
           eventClick: function (info) {
+
+            if (info.event.extendedProps.source) {
+              alert('This event cannot be modified or deleted.');
+              return;
+            }
+
             // Handle event click
             console.log('Event clicked: ' + info.event.title);
 
