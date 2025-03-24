@@ -74,6 +74,15 @@ A summary of your appointment details will be displayed, including:
 #### Confirm Your Appointment:
 - If everything is correct, click the **Confirm** button to book your appointment.
 - The appointment is created correctly !
+#### Review Your Appointment Details:
+A summary of your appointment details will be displayed, including:
+- **Appointment Type**
+- **Advisor**
+- **Date and Time**
+- **Your Personal Information**
+### Email Confirmation
+![Email: Confirm Appointment](Guide/email_confirmation.png)
+
 ![Table Appointment](Guide/table_appointment.png)
 ## Database Schema :
 ![Database](Guide/database.png)

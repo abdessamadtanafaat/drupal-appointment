@@ -354,7 +354,7 @@ class BookingForm extends FormBase {
 
   public function step5(array &$form, FormStateInterface $form_state) {
     // Enable AJAX for the form.
- $form += $this->formNavigation->getFormWrapper();
+  $form += $this->formNavigation->getFormWrapper();
 
     // Attach the necessary libraries.
     $form['#attached']['library'][] = 'appointment/personal_information_style';
@@ -431,8 +431,6 @@ class BookingForm extends FormBase {
 
     return $form;
   }
-
-  // In your BookingForm class:
 
   /**
    * Handles moving to the next step.
