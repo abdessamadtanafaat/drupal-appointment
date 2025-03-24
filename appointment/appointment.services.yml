@@ -8,3 +8,13 @@ services:
       - '@plugin.manager.mail'
       - '@renderer'
       - '@logger.factory'
+      -
+  appointment.storage:
+    class: Drupal\appointment\Service\AppointmentStorage
+    arguments:
+      - '@database'
+      - '@uuid'
+      - '@date.formatter'
+      - '@current_user'
+      - '@logger.factory'
+      -

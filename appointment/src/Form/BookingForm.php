@@ -3,6 +3,7 @@
 namespace Drupal\appointment\Form;
 
 use Drupal\appointment\Service\AppointmentMailerService;
+use Drupal\appointment\Service\AppointmentStorage;
 use Drupal\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -29,6 +30,11 @@ class BookingForm extends FormBase {
   protected $tempStoreFactory;
 
   /**
+   * The appointment storage service.
+   */
+  protected AppointmentStorage $appointmentStorage;
+
+  /**
    * Constructs a new BookingForm.
    *
    * @param \Drupal\Core\TempStore\PrivateTempStoreFactory $temp_store_factory
@@ -38,10 +44,13 @@ class BookingForm extends FormBase {
    */
 
   public function __construct(PrivateTempStoreFactory $tempStoreFactory,
-                              AppointmentMailerService $appointment_mailer) {
+                              AppointmentMailerService $appointment_mailer,
+                              AppointmentStorage $appointment_storage
+  ) {
     $this->tempStoreFactory = $tempStoreFactory;
     $this->tempStore = $this->tempStoreFactory->get('appointment');
     $this->appointmentMailer = $appointment_mailer;
+    $this->appointmentStorage = $appointment_storage;
   }
 
   /**
@@ -50,7 +59,8 @@ class BookingForm extends FormBase {
   public static function create(ContainerInterface|\Symfony\Component\DependencyInjection\ContainerInterface $container) {
     return new static(
       $container->get('tempstore.private'),
-      $container->get('appointment.mailer')
+      $container->get('appointment.mailer'),
+      $container->get('appointment.storage')
     );
   }
 
@@ -811,41 +821,6 @@ class BookingForm extends FormBase {
     return $response;
   }
 
-
-//
-//  // knowing the css but displayed under the step 6 !
-//  public function submitForm(array &$form, FormStateInterface $form_state) {
-//    // Retrieve the appointment data from tempStore.
-//    $values = $this->tempStore->get('values') ?? [];
-//
-//    // Log the tempstore data for debugging.
-//    \Drupal::logger('appointment')->notice('TempStore Values: ' . print_r($values, TRUE));
-//
-//    // Define the path to the image.
-//    $image_path = base_path() . \Drupal::service('extension.list.module')->getPath('appointment') . '/assets/calendar-success.png';
-//
-//    // Attach the CSS library.
-//    $form['#attached']['library'][] = 'appointment/confirmation_style';
-//
-//    // Add the confirmation message to the form.
-//    $form['confirmation_message'] = [
-//      '#theme' => 'appointment_confirmation_message',
-//      '#image_path' => $image_path,
-//      '#title' => $this->t('Your appointment has been successfully booked.'),
-//      '#message' => $this->t('You can modify your appointment by entering your phone number.'),
-//      '#change_button' => [
-//        '#type' => 'link',
-//        '#title' => $this->t('Change Appointment'),
-//        '#url' => \Drupal\Core\Url::fromRoute('<front>'), // Replace with the correct route for changing the appointment.
-//        '#attributes' => [
-//          'class' => ['button', 'button--primary'],
-//        ],
-//      ],
-//    ];
-//
-//    // Return the form.
-//    return $form;
-//  }
   /**
    * Retrieves available agencies.
    *
@@ -942,224 +917,18 @@ class BookingForm extends FormBase {
   }
 
   /**
-   * Saves the appointment data to the database.
-   *
-   * @param array $values
-   *   The appointment data from the tempStore.
+   * Saves the appointment data.
    */
-  protected function saveAppointment(array $values) {
-    // Generate a UUID for the appointment.
-    $uuid_service = \Drupal::service('uuid');
-    $uuid = $uuid_service->generate();
+  protected function saveAppointment(array $values): ?int {
+    $appointment_id = $this->appointmentStorage->saveAppointment($values);
 
-    // Get the current user ID.
-    $uid = \Drupal::currentUser()->id();
-
-    // Ensure the start_date and end_date are in the correct format (ISO 8601).
-    $start_date = !empty($values['selected_slot']['start']) ? $values['selected_slot']['start'] : '';
-    $end_date = !empty($values['selected_slot']['end']) ? $values['selected_slot']['end'] : '';
-
-    // Fetch the advisor's name based on advisor_id.
-    $advisor_id = $values['advisor_id'] ?? NULL;
-    $advisor_name = '';
-    if ($advisor_id) {
-      \Drupal::logger('appointment')->notice('Loading advisor with ID: ' . $advisor_id);
-
-      // Load the advisor's name from the users_field_data table.
-      $query = \Drupal::database()->select('users_field_data', 'u');
-      $query->fields('u', ['name']);
-      $query->condition('u.uid', $advisor_id);
-      $advisor_name = $query->execute()->fetchField();
-
-      if ($advisor_name) {
-        \Drupal::logger('appointment')->notice('Advisor Name: ' . $advisor_name);
-      } else {
-        \Drupal::logger('appointment')->error('Failed to load advisor with ID: ' . $advisor_id);
-      }
-    } else {
-      \Drupal::logger('appointment')->error('Advisor ID is not set.');
+    if ($appointment_id) {
+      $fields = $this->appointmentStorage->prepareAppointmentFields($values);
+      $this->appointmentMailer->sendConfirmationEmail($fields, $appointment_id);
     }
 
-    // Fetch the agency name based on agency_id.
-    $agency_id = $values['agency_id'] ?? NULL;
-    $agency_name = '';
-    if ($agency_id) {
-      \Drupal::logger('appointment')->notice('Loading agency with ID: ' . $agency_id);
-
-      // Load the agency's name from the appointment_agency table.
-      $query = \Drupal::database()->select('appointment_agency', 'a');
-      $query->fields('a', ['name']);
-      $query->condition('a.id', $agency_id);
-      $agency_name = $query->execute()->fetchField();
-
-      if ($agency_name) {
-        \Drupal::logger('appointment')->notice('Agency Name: ' . $agency_name);
-      } else {
-        \Drupal::logger('appointment')->error('Failed to load agency with ID: ' . $agency_id);
-      }
-    } else {
-      \Drupal::logger('appointment')->error('Agency ID is not set.');
-    }
-
-    // Fetch the appointment type name based on appointment_type.
-    $appointment_type_id = $values['appointment_type_id'] ?? NULL;
-    $appointment_type_name = '';
-    if ($appointment_type_id) {
-      \Drupal::logger('appointment')->notice('Loading appointment type with ID: ' . $appointment_type_id);
-
-      // Load the appointment type name from the taxonomy_term_field_data table.
-      $query = \Drupal::database()->select('taxonomy_term_field_data', 't');
-      $query->fields('t', ['name']);
-      $query->condition('t.tid', $appointment_type_id);
-      $appointment_type_name = $query->execute()->fetchField();
-
-      if ($appointment_type_name) {
-        \Drupal::logger('appointment')->notice('Appointment Type Name: ' . $appointment_type_name);
-      } else {
-        \Drupal::logger('appointment')->error('Failed to load appointment type with ID: ' . $appointment_type_id);
-      }
-    } else {
-      \Drupal::logger('appointment')->error('Appointment Type ID is not set.');
-    }
-
-    // Format the description as "Appointment - 2025-03-24 - 09:00 to 09:30".
-    $description = '';
-    if ($start_date && $end_date) {
-      $start_date_formatted = \Drupal::service('date.formatter')->format(strtotime($start_date), 'custom', 'Y-m-d');
-      $start_time_formatted = \Drupal::service('date.formatter')->format(strtotime($start_date), 'custom', 'H:i');
-      $end_time_formatted = \Drupal::service('date.formatter')->format(strtotime($end_date), 'custom', 'H:i');
-      $description = t('Appointment - @date - @start_time to @end_time', [
-        '@date' => $start_date_formatted,
-        '@start_time' => $start_time_formatted,
-        '@end_time' => $end_time_formatted,
-      ]);
-    }
-
-    // Prepare the data for insertion.
-    $fields = [
-      'uuid' => $uuid, // Generate a UUID.
-      'agency_id' => $agency_id,
-      'agency' => $agency_name, // Store the agency name.
-      'appointment_type' => $appointment_type_id,
-      'appointment_type_name' => $appointment_type_name, // Store the appointment type name.
-      'description'=>$description,
-      'advisor_id' => $advisor_id,
-      'advisor' => $advisor_name, // Store the advisor name.
-      'start_date' => $start_date, // Start date and time in ISO 8601 format.
-      'end_date' => $end_date, // End date and time in ISO 8601 format.
-      'first_name' => $values['first_name'] ?? NULL,
-      'last_name' => $values['last_name'] ?? NULL,
-      'email' => $values['email'] ?? NULL,
-      'phone' => $values['phone'] ?? NULL,
-      'appointment_status' => 'pending', // Default status.
-      'label' => $values['selected_slot']['title'] ?? NULL, // Use the title of the selected slot.
-      'status' => 1, // Default status (active).
-      //'description__value' => $description, // Auto-generated description.
-      //'description__format' => 'basic_html', // Default format.
-      'uid' => $uid, // Current user ID.
-      'created' => \Drupal::time()->getRequestTime(), // Current timestamp.
-      'changed' => \Drupal::time()->getRequestTime(), // Current timestamp.
-    ];
-
-    // Insert the data into the database.
-    try {
-      $appointment_id = \Drupal::database()->insert('appointment')
-        ->fields($fields)
-        ->execute();
-
-      // Send confirmation email using the injected service
-      $email_result = $this->appointmentMailer->sendConfirmationEmail($fields, $appointment_id);
-
-      if ($email_result) {
-        \Drupal::logger('appointment')->info('Confirmation email sent successfully', [
-          'to' => $fields['email'],
-          'appointment_id' => $appointment_id
-        ]);
-      }
-
-      // Log the insertion for debugging.
-      \Drupal::logger('appointment')->notice('Appointment saved: ' . print_r($fields, TRUE));
-    } catch (\Exception $e) {
-      // Log the error if the insertion fails.
-      \Drupal::logger('appointment')->error('Failed to save appointment: ' . $e->getMessage());
-    }
+    return $appointment_id;
   }
-
-//  protected function sendConfirmationEmail(array $appointment, $appointment_id) {
-//    \Drupal::logger('appointment')->debug('Preparing confirmation email', [
-//      'appointment_id' => $appointment_id,
-//      'recipient' => $appointment['email']
-//    ]);
-//
-//    $mailManager = \Drupal::service('plugin.manager.mail');
-//    $langcode = \Drupal::currentUser()->getPreferredLangcode();
-//
-//    try {
-//      // Format dates
-//      $start_date = \Drupal::service('date.formatter')->format(strtotime($appointment['start_date']), 'custom', 'F j, Y g:i a');
-//      $end_date = \Drupal::service('date.formatter')->format(strtotime($appointment['end_date']), 'custom', 'g:i a');
-//
-//      \Drupal::logger('appointment')->debug('Email date formatting complete', [
-//        'start_date' => $start_date,
-//        'end_date' => $end_date
-//      ]);
-//
-//      $params = [
-//        'subject' => t('Your appointment confirmation'),
-//        'body' => [
-//          '#theme' => 'appointment_confirmation',
-//          '#appointment' => $appointment,
-//          '#appointment_id' => $appointment_id,
-//          '#start_date' => $start_date,
-//          '#end_date' => $end_date,
-//          '#advisor_name' => $appointment['advisor'],
-//          '#agency_name' => $appointment['agency'],
-//          '#appointment_type' => $appointment['appointment_type_name'],
-//        ],
-//      ];
-//
-//      $to = $appointment['email'];
-//
-//      \Drupal::logger('appointment')->debug('Attempting to send email', [
-//        'to' => $to,
-//        'params' => $params
-//      ]);
-//
-//      $result = $mailManager->mail(
-//        'appointment',
-//        'confirmation',
-//        $to,
-//        $langcode,
-//        $params,
-//        NULL,
-//        TRUE
-//      );
-//
-//      if ($result['result'] !== TRUE) {
-//        \Drupal::logger('appointment')->error('Email sending failed', [
-//          'error' => $result['message'] ?? 'Unknown error',
-//          'to' => $to,
-//          'appointment_id' => $appointment_id
-//        ]);
-//        return FALSE;
-//      }
-//
-//      \Drupal::logger('appointment')->notice('Email sent successfully', [
-//        'to' => $to,
-//        'message_id' => $result['message_id'] ?? 'unknown'
-//      ]);
-//
-//      return TRUE;
-//
-//    } catch (\Exception $e) {
-//      \Drupal::logger('appointment')->error('Email sending exception', [
-//        'error' => $e->getMessage(),
-//        'trace' => $e->getTraceAsString(),
-//        'appointment_id' => $appointment_id
-//      ]);
-//      return FALSE;
-//    }
-//  }
 
   protected function clearTempStore() {
     $this->tempStore->delete('values');
