@@ -83,6 +83,7 @@ A summary of your appointment details will be displayed, including:
 ### Email Confirmation
 ![Email: Confirm Appointment](Guide/email_confirmation.png)
 
+### Table Appointment
 ![Table Appointment](Guide/table_appointment.png)
 ## Database Schema :
 ![Database](Guide/database.png)
