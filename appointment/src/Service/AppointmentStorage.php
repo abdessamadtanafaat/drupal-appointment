@@ -218,4 +218,77 @@ class AppointmentStorage {
       '@end_time' => $end_time,
     ])->render();
   }
+
+  /**
+   * Retrieves available agencies.
+   *
+   * @return array
+   *   An associative array of agency IDs and names.
+   */
+  public function getAgencies(): array {
+    // Query for agency entities.
+    $agency_storage = \Drupal::entityTypeManager()->getStorage('appointment_agency');
+    return $agency_storage->loadMultiple();
+  }
+
+  /**
+   * Fetches appointment types from the 'appointment_types' taxonomy vocabulary.
+   *
+   * @return array
+   *   An associative array of appointment types keyed by term ID.
+   */
+  public function getAppointmentTypes() {
+    $appointmentTypes = [];
+
+    // Load terms from the 'appointment_types' vocabulary.
+    $terms = \Drupal::entityTypeManager()
+      ->getStorage('taxonomy_term')
+      ->loadTree('appointment_types');
+
+    // Build an options array from the terms.
+    foreach ($terms as $term) {
+      $appointmentTypes[$term->tid] = $term->name;
+      $appointmentTypes[$term->tid] = $term->name;
+
+    }
+
+    return $appointmentTypes;
+  }
+
+  /**
+   * Retrieves the list of advisors.
+   *
+   * @return array
+   *   An associative array of advisor IDs and names.
+   */
+  public function getAdvisors(): array {
+    $advisors = [];
+
+    // Load the user storage service.
+    $user_storage = \Drupal::entityTypeManager()->getStorage('user');
+
+    // Query users with a specific role (e.g., 'advisor').
+    $query = $user_storage->getQuery()
+      ->condition('status', 1) // Only active users.
+      ->condition('roles', 'advisor') // Replace 'advisor' with the correct role machine name.
+      ->sort('name', 'ASC') // Sort by name.
+      ->accessCheck(TRUE); // Explicitly enable access checking.
+
+    // Execute the query and get the user IDs.
+    $uids = $query->execute();
+
+    if (!empty($uids)) {
+      // Load the user entities.
+      $users = $user_storage->loadMultiple($uids);
+
+      // Build the list of advisors.
+      foreach ($users as $user) {
+        $advisors[$user->id()] = $user; // Store the full user object.
+      }
+    }
+
+    return $advisors;
+  }
+
+
 }

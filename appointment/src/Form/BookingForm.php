@@ -4,9 +4,12 @@ namespace Drupal\appointment\Form;
 
 use Drupal\appointment\Service\AppointmentMailerService;
 use Drupal\appointment\Service\AppointmentStorage;
+use Drupal\appointment\Service\FormNavigation;
 use Drupal\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
 
 
@@ -34,6 +37,10 @@ class BookingForm extends FormBase {
    */
   protected AppointmentStorage $appointmentStorage;
 
+  protected FormNavigation $formNavigation;
+  protected LoggerChannelInterface $logger;
+
+
   /**
    * Constructs a new BookingForm.
    *
@@ -45,12 +52,18 @@ class BookingForm extends FormBase {
 
   public function __construct(PrivateTempStoreFactory $tempStoreFactory,
                               AppointmentMailerService $appointment_mailer,
-                              AppointmentStorage $appointment_storage
+                              AppointmentStorage $appointment_storage,
+                               FormNavigation $form_navigation,
+                                LoggerChannelFactoryInterface $logger_factory
+
   ) {
     $this->tempStoreFactory = $tempStoreFactory;
     $this->tempStore = $this->tempStoreFactory->get('appointment');
     $this->appointmentMailer = $appointment_mailer;
     $this->appointmentStorage = $appointment_storage;
+    $this->formNavigation = $form_navigation;
+    $this->logger = $logger_factory->get('appointment');
+
   }
 
   /**
@@ -60,7 +73,9 @@ class BookingForm extends FormBase {
     return new static(
       $container->get('tempstore.private'),
       $container->get('appointment.mailer'),
-      $container->get('appointment.storage')
+      $container->get('appointment.storage'),
+      $container->get('appointment.form_navigation'),
+      $container->get('logger.factory')
     );
   }
 
@@ -76,19 +91,13 @@ class BookingForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
 
-    // Get current step, defaulting to step 1.
-    $step = $form_state->get('step') ?? 1;
+    $this->formNavigation->initializeFormState($form_state);
+    $step = $this->formNavigation->getCurrentStep();
 
-    \Drupal::logger('appointment')->notice('Building form for step: ' . $step); // Log the current step.
+    $this->logger->notice('Building form for step: @step', ['@step' => $step]);
 
-    // Clear the tempStore when starting a new appointment.
-    if (!$form_state->get('step')) {
-      $this->clearTempStore();
-    }
-
-    // Wrapper for AJAX updates.
-    $form['#prefix'] = '<div id="booking-form-wrapper">';
-    $form['#suffix'] = '</div>';
+    // Add form wrapper
+    $form += $this->formNavigation->getFormWrapper();
 
     switch ($step) {
       case 1:
@@ -112,7 +121,6 @@ class BookingForm extends FormBase {
       default:
         throw new \InvalidArgumentException('Invalid step');
     }
-
     return $form;
   }
 
@@ -121,8 +129,7 @@ class BookingForm extends FormBase {
    */
   public function step1($form, FormStateInterface $form_state) {
     // Enable AJAX for the form.
-    $form['#prefix'] = '<div id="booking-form-wrapper">';
-    $form['#suffix'] = '</div>';
+    $form += $this->formNavigation->getFormWrapper();
 
     // Attach the library.
     $form['#attached']['library'][] = 'appointment/appointment_styles';
@@ -142,7 +149,7 @@ class BookingForm extends FormBase {
     ];
 
     // Retrieve the list of agencies.
-    $agencies = $this->getAgencies();
+    $agencies = $this->appointmentStorage->getAgencies();
 
     // Loop through the agencies and prepare them for rendering as cards.
     $agency_cards = [];
@@ -162,18 +169,8 @@ class BookingForm extends FormBase {
       'cards' => $agency_cards,
     ];
 
-    // Add a submit button.
-    $form['actions']['next'] = [
-      '#type' => 'submit',
-      '#value' => $this->t('Next'),
-      '#submit' => ['::nextStep'],
-      '#ajax' => [
-        'callback' => '::updateFormStep',
-        'wrapper' => 'booking-form-wrapper',
-        'effect' => 'fade',
-      ],
-    ];
-
+    // Add navigation buttons
+    $form['actions'] = $this->formNavigation->getNavigationButtons(1);
 
     return $form;
   }
@@ -183,8 +180,7 @@ class BookingForm extends FormBase {
   public function step2($form, FormStateInterface $form_state) {
 
     // Enable AJAX for the form.
-    $form['#prefix'] = '<div id="booking-form-wrapper">';
-    $form['#suffix'] = '</div>';
+ $form += $this->formNavigation->getFormWrapper();
 
     // Attach the library.
     $form['#attached']['library'][] = 'appointment/appointment_types_styles';
@@ -197,14 +193,14 @@ class BookingForm extends FormBase {
 
 
     // Retrieve the list of appointment types.
-    $appointment_types = $this->getAppointmentTypes();
+    $appointmentTypes = $this->appointmentStorage->getAppointmentTypes();
 
     // Define the path to the image.
     $image_path = base_path() . \Drupal::service('extension.list.module')->getPath('appointment') . '/assets/file.png';
 
     // Loop through the appointment types and prepare them for rendering as cards.
     $appointment_type_cards = [];
-    foreach ($appointment_types as $id => $label) {
+    foreach ($appointmentTypes as $id => $label) {
       $appointment_type_cards[] = [
         '#theme' => 'appointment_type_card',
         '#appointment_type' => $label,
@@ -236,30 +232,8 @@ class BookingForm extends FormBase {
         ],
     ];
 
-    // Navigation buttons.
-    $form['actions']['prev'] = [
-      '#type' => 'submit',
-      '#value' => $this->t('Previous'),
-      '#submit' => ['::prevStep'],
-      '#limit_validation_errors' => [],
-      '#ajax' => [
-        'callback' => '::updateFormStep',
-        'wrapper' => 'booking-form-wrapper',
-        'effect' => 'fade',
-      ],
-    ];
-
-    $form['actions']['next'] = [
-      '#type' => 'submit',
-      '#value' => $this->t('Next'),
-      '#submit' => ['::nextStep'],
-      '#ajax' => [
-        'callback' => '::updateFormStep',
-        'wrapper' => 'booking-form-wrapper',
-        'effect' => 'fade',
-
-      ],
-    ];
+    // Add navigation buttons
+    $form['actions'] = $this->formNavigation->getNavigationButtons(2);
 
     return $form;
   }
@@ -270,8 +244,7 @@ class BookingForm extends FormBase {
   public function step3($form, FormStateInterface $form_state) {
 
     // Enable AJAX for the form.
-    $form['#prefix'] = '<div id="booking-form-wrapper">';
-    $form['#suffix'] = '</div>';
+ $form += $this->formNavigation->getFormWrapper();
 
     // Attach the library.
     $form['#attached']['library'][] = 'appointment/advisor_selection_styles';
@@ -283,7 +256,7 @@ class BookingForm extends FormBase {
     ];
 
     // Retrieve the list of advisors.
-    $advisors= $this->getAdvisors();
+    $advisors = $this->appointmentStorage->getAdvisors();
 
     \Drupal::logger('advisors')->notice('Advisors Values: ' . print_r($advisors, TRUE));
 
@@ -316,30 +289,8 @@ class BookingForm extends FormBase {
       ],
     ];
 
-    // Navigation buttons.
-    $form['actions']['prev'] = [
-      '#type' => 'submit',
-      '#value' => $this->t('Previous'),
-      '#submit' => ['::prevStep'],
-      '#limit_validation_errors' => [],
-      '#ajax' => [
-        'callback' => '::updateFormStep',
-        'wrapper' => 'booking-form-wrapper',
-        'effect' => 'fade',
-      ],
-    ];
-
-    $form['actions']['next'] = [
-      '#type' => 'submit',
-      '#value' => $this->t('Next'),
-      '#submit' => ['::nextStep'],
-      '#ajax' => [
-        'callback' => '::updateFormStep',
-        'wrapper' => 'booking-form-wrapper',
-        'effect' => 'fade',
-
-      ],
-    ];
+    // Add navigation buttons
+    $form['actions'] = $this->formNavigation->getNavigationButtons(3);
 
     return $form;
   }
@@ -350,8 +301,7 @@ class BookingForm extends FormBase {
 
   public function step4($form, FormStateInterface $form_state) {
     // Enable AJAX for the form.
-    $form['#prefix'] = '<div id="booking-form-wrapper">';
-    $form['#suffix'] = '</div>';
+ $form += $this->formNavigation->getFormWrapper();
 
     // Retrieve the appointment data from tempstore.
     $values = $this->tempStore->get('values') ?? [];
@@ -392,29 +342,8 @@ class BookingForm extends FormBase {
       ],
     ];
 
-    // Navigation buttons.
-    $form['actions']['prev'] = [
-      '#type' => 'submit',
-      '#value' => $this->t('Previous'),
-      '#submit' => ['::prevStep'],
-      '#limit_validation_errors' => [],
-      '#ajax' => [
-        'callback' => '::updateFormStep',
-        'wrapper' => 'booking-form-wrapper',
-        'effect' => 'fade',
-      ],
-    ];
-
-    $form['actions']['next'] = [
-      '#type' => 'submit',
-      '#value' => $this->t('Next'),
-      '#submit' => ['::nextStep'],
-      '#ajax' => [
-        'callback' => '::updateFormStep',
-        'wrapper' => 'booking-form-wrapper',
-        'effect' => 'fade',
-      ],
-    ];
+    // Add navigation buttons
+    $form['actions'] = $this->formNavigation->getNavigationButtons(4);
 
     return $form;
   }
@@ -425,8 +354,7 @@ class BookingForm extends FormBase {
 
   public function step5(array &$form, FormStateInterface $form_state) {
     // Enable AJAX for the form.
-    $form['#prefix'] = '<div id="booking-form-wrapper">';
-    $form['#suffix'] = '</div>';
+ $form += $this->formNavigation->getFormWrapper();
 
     // Attach the necessary libraries.
     $form['#attached']['library'][] = 'appointment/personal_information_style';
@@ -438,7 +366,10 @@ class BookingForm extends FormBase {
     \Drupal::logger('appointment')->notice('Tempstore data in step5: ' . print_r($values, TRUE));
 
     // Prepare appointment details for the Twig template.
-    $appointment_details = $this->renderAppointmentDetails($values);
+    $appointment_details = $this->formNavigation->renderAppointmentDetails($values);
+
+    \Drupal::logger('appointment')->notice('details: ' . print_r($appointment_details, TRUE));
+
 
     // Define the path to the image.
     $image_path = base_path() . \Drupal::service('extension.list.module')->getPath('appointment') . '/assets/calendar-success.png';
@@ -447,101 +378,12 @@ class BookingForm extends FormBase {
     $form['container'] = [
       '#type' => 'container',
       '#attributes' => ['class' => ['personal-information-container']],
-      'appointment_details' => [
-        '#type' => 'container',
-        '#attributes' => ['class' => ['appointment-details']],
-        'image' => [
-          '#theme' => 'image',
-          '#uri' => $image_path,
-          '#alt' => $this->t('Calendar Icon'),
-          '#attributes' => ['class' => ['calendar-icon']],
-        ],
-        'title' => [
-          '#markup' => '<h4 class="appointment-title">' . $this->t('Your appointment') . '</h4>',
-        ],
-        'date' => [
-          '#markup' => '<p class="appointment-label"><strong>' . $this->t('Day:') . '</strong></p>' .
-            '<p class="appointment-value"><strong>' . $appointment_details['date'] . '</strong></p>',
-        ],
-        'time' => [
-          '#markup' => '<p class="appointment-label"><strong>' . $this->t('Time:') . '</strong></p>' .
-            '<p class="appointment-value"><strong>' . $appointment_details['time'] . '</strong></p>',
-        ],
-      ],
-      'personal_information_form' => [
-        '#type' => 'container',
-        '#attributes' => ['class' => ['personal-information-form']],
-        'first_name' => [
-          '#type' => 'textfield',
-          '#title' => $this->t('First Name'),
-          '#required' => TRUE,
-          '#default_value' => $values['first_name'] ?? '',
-          '#attributes' => [
-            'placeholder' => $this->t('Enter your first name'),
-          ],
-        ],
-        'last_name' => [
-          '#type' => 'textfield',
-          '#title' => $this->t('Last Name'),
-          '#required' => TRUE,
-          '#default_value' => $values['last_name'] ?? '',
-          '#attributes' => [
-            'placeholder' => $this->t('Enter your last name'),
-          ],
-        ],
-        'phone' => [
-          '#type' => 'tel',
-          '#title' => $this->t('Phone'),
-          '#required' => TRUE,
-          '#default_value' => $values['phone'] ?? '',
-          '#attributes' => [
-            'placeholder' => $this->t('Enter your phone number'),
-          ],
-        ],
-        'email' => [
-          '#type' => 'email',
-          '#title' => $this->t('Email'),
-          '#required' => TRUE,
-          '#default_value' => $values['email'] ?? '',
-          '#attributes' => [
-            'placeholder' => $this->t('Enter your email address'),
-          ],
-        ],
-        'terms' => [
-          '#type' => 'checkbox',
-          '#title' => $this->t('I agree to the terms and conditions'),
-          '#required' => TRUE,
-          '#default_value' => $values['terms'] ?? FALSE,
-        ],
-      ],
+      'appointment_details' => $this->formNavigation->buildAppointmentDetailsSection($appointment_details, $image_path),
+      'personal_information_form' => $this->formNavigation->buildPersonalInformationForm($values),
     ];
 
-    // Navigation buttons.
-    $form['actions'] = [
-      '#type' => 'actions',
-      '#attributes' => ['class' => ['form-actions']],
-      'prev' => [
-        '#type' => 'submit',
-        '#value' => $this->t('Previous'),
-        '#submit' => ['::prevStep'],
-        '#limit_validation_errors' => [],
-        '#ajax' => [
-          'callback' => '::updateFormStep',
-          'wrapper' => 'booking-form-wrapper',
-          'effect' => 'fade',
-        ],
-      ],
-      'next' => [
-        '#type' => 'submit',
-        '#value' => $this->t('Next'),
-        '#submit' => ['::nextStep'],
-        '#ajax' => [
-          'callback' => '::updateFormStep',
-          'wrapper' => 'booking-form-wrapper',
-          'effect' => 'fade',
-        ],
-      ],
-    ];
+    // Add navigation buttons using FormNavigation service
+    $form['actions'] = $this->formNavigation->getNavigationButtons(5);
 
     return $form;
   }
@@ -551,8 +393,7 @@ class BookingForm extends FormBase {
    */
   public function step6(array &$form, FormStateInterface $form_state) {
     // Enable AJAX for the form.
-    $form['#prefix'] = '<div id="booking-form-wrapper">';
-    $form['#suffix'] = '</div>';
+ $form += $this->formNavigation->getFormWrapper();
 
     // Attach the necessary libraries.
     $form['#attached']['library'][] = 'appointment/confirm_information_style';
@@ -564,7 +405,7 @@ class BookingForm extends FormBase {
     \Drupal::logger('appointment')->notice('Tempstore data in step6: ' . print_r($values, TRUE));
 
     // Prepare appointment details for the Twig template.
-    $appointment_details = $this->renderAppointmentDetails($values);
+    $appointment_details = $this->formNavigation->renderAppointmentDetails($values);
 
     // Prepare appointment details for the Twig template.
     $appointment_details_confirmation = [
@@ -577,11 +418,8 @@ class BookingForm extends FormBase {
       'email' => $values['email'] ?? '',
     ];
 
-
     // Log the tempstore data for debugging.
     \Drupal::logger('appointment')->notice('appointment_details: ' . print_r($appointment_details_confirmation, TRUE));
-
-
 
     // Use the #theme property to render the Twig template.
     $form['container'] = [
@@ -589,105 +427,32 @@ class BookingForm extends FormBase {
       '#appointment_details_confirmation' => $appointment_details_confirmation,
     ];
 
-    // Navigation buttons.
-    $form['actions']['prev'] = [
-      '#type' => 'submit',
-      '#value' => $this->t('Previous'),
-      '#submit' => ['::prevStep'],
-      '#limit_validation_errors' => [],
-      '#ajax' => [
-        'callback' => '::updateFormStep',
-        'wrapper' => 'booking-form-wrapper',
-        'effect' => 'fade',
-      ],
-    ];
-
-    $form['actions']['next'] = [
-      '#type' => 'submit',
-      '#value' => $this->t('Confirm'),
-      '#submit' => ['::submitForm'],
-      '#ajax' => [
-        'callback' => '::submitForm',
-        'wrapper' => 'booking-form-wrapper',
-        'effect' => 'fade',
-      ],
-    ];
+    $form['actions'] = $this->formNavigation->getNavigationButtons(6, TRUE);
 
     return $form;
   }
 
-  /**
-   * Updates the form dynamically using AJAX.
-   */
-  public function updateFormStep(array $form, FormStateInterface $form_state) {
-    \Drupal::logger('appointment')->notice('updateFormStep method triggered.'); // Log to confirm the method is called.
-
-    return $form;
-  }
+  // In your BookingForm class:
 
   /**
-   * Moves to the next step.
+   * Handles moving to the next step.
    */
   public function nextStep(array &$form, FormStateInterface $form_state) {
-    $currentStep = $form_state->get('step') ?? 1;
-
-    // Retrieve existing values from tempStore.
-    $values = $this->tempStore->get('values') ?? [];
-
-    // Save form values to tempStore.
-    $values['agency_id'] = $form_state->getValue('agency_id') ?? $values['agency_id'];
-    $values['appointment_type_id'] = $form_state->getValue('appointment_type_id') ?? $values['appointment_type_id'];
-    $values['appointment_type_name'] = $form_state->getValue('appointment_type_name') ?? $values['appointment_type_name'];
-    $values['selected_datetime'] = $form_state->getValue('selected_datetime') ?? $values['selected_datetime'];
-    $values['advisor_id'] = $form_state->getValue('advisor_id') ?? $values['advisor_id'];
-    $values['first_name'] = $form_state->getValue('first_name') ?? $values['first_name'];
-    $values['last_name'] = $form_state->getValue('last_name') ?? $values['last_name'];
-    $values['phone'] = $form_state->getValue('phone') ?? $values['phone'];
-    $values['email'] = $form_state->getValue('email') ?? $values['email'];
-    $values['terms'] = $form_state->getValue('terms') ?? $values['terms'];
-
-    // Save updated values to tempStore.
-    $this->tempStore->set('values', $values);
-
-    // Log the updated values for debugging.
-    \Drupal::logger('appointment')->notice('Updated TempStore Values: ' . print_r($values, TRUE));
-
-    // Move to the next step.
-    $nextStep = $currentStep + 1;
-    $form_state->set('step', $nextStep);
-
-    // Log the next step for debugging.
-    \Drupal::logger('appointment')->notice('Next Step: ' . $nextStep);
-
-    // Rebuild the form.
-    $form_state->setRebuild(TRUE);
+    $this->formNavigation->nextStep($form, $form_state);
   }
+
   /**
-   * Moves to the previous step.
+   * Handles moving to the previous step.
    */
   public function prevStep(array &$form, FormStateInterface $form_state) {
-    // Retrieve existing values from tempStore.
-    $values = $this->tempStore->get('values') ?? [];
+    $this->formNavigation->prevStep($form, $form_state);
+  }
 
-    // Log the tempStore values before decrementing the step.
-    \Drupal::logger('appointment')->notice('TempStore values before decrementing step: ' . print_r($values, TRUE));
-
-    // Decrement the step.
-    $currentStep = $form_state->get('step') ?? 1;
-    $previousStep = $currentStep - 1;
-    $previousStep = max(1, $previousStep);
-
-    // Log the previous step.
-    \Drupal::logger('appointment')->notice('Moving to previous step: ' . $previousStep);
-
-    // Set the new step in the form state.
-    $form_state->set('step', $previousStep);
-
-    // Rebuild the form.
-    $form_state->setRebuild(TRUE);
-
-    // Log the tempStore values after decrementing the step.
-    \Drupal::logger('appointment')->notice('TempStore values after decrementing step: ' . print_r($this->tempStore->get('values'), TRUE));
+  /**
+   * AJAX callback to update the form step.
+   */
+  public function updateFormStep(array &$form, FormStateInterface $form_state) {
+    return $this->formNavigation->updateFormStep($form, $form_state);
   }
 
   /**
@@ -761,7 +526,6 @@ class BookingForm extends FormBase {
     }
   }
 
-
   // not knowing the css !
   public function submitForm(array &$form, FormStateInterface $form_state) {
 
@@ -780,14 +544,23 @@ class BookingForm extends FormBase {
     // Log the tempstore data for debugging.
     \Drupal::logger('appointment')->notice('TempStore Values: ' . print_r($values, TRUE));
 
-    // Save the appointment data (you need to implement this method).
-     $this->saveAppointment($values);
+    // Save the appointment using the storage service
+    $appointment_id = $this->appointmentStorage->saveAppointment($values);
 
-    // Display a success message.
+    if ($appointment_id) {
+      // Get the prepared fields for email
+      $fields = $this->appointmentStorage->prepareAppointmentFields($values);
+
+      // Send confirmation email
+      $this->appointmentMailer->sendConfirmationEmail($fields, $appointment_id);
+    }
+
+
+      // Display a success message.
     \Drupal::messenger()->addMessage($this->t('The appointment is saved.'));
 
     // Clear the tempstore after saving.
-    $this->clearTempStore();
+    $this->formNavigation->clearTempStore();
 
     // Define the path to the image.
     $image_path = base_path() . \Drupal::service('extension.list.module')->getPath('appointment') . '/assets/calendar-success.png';
@@ -819,119 +592,6 @@ class BookingForm extends FormBase {
     $response->addCommand(new \Drupal\Core\Ajax\ReplaceCommand('#booking-form-wrapper', $confirmation_message_rendered));
 
     return $response;
-  }
-
-  /**
-   * Retrieves available agencies.
-   *
-   * @return array
-   *   An associative array of agency IDs and names.
-   */
-  protected function getAgencies(): array {
-    // Query for agency entities.
-    $agency_storage = \Drupal::entityTypeManager()->getStorage('appointment_agency');
-    return $agency_storage->loadMultiple();
-  }
-
-  /**
-   * Fetches appointment types from the 'appointment_types' taxonomy vocabulary.
-   *
-   * @return array
-   *   An associative array of appointment types keyed by term ID.
-   */
-  protected function getAppointmentTypes() {
-    $appointmentTypes = [];
-
-    // Load terms from the 'appointment_types' vocabulary.
-    $terms = \Drupal::entityTypeManager()
-      ->getStorage('taxonomy_term')
-      ->loadTree('appointment_types');
-
-    // Build an options array from the terms.
-    foreach ($terms as $term) {
-      $appointmentTypes[$term->tid] = $term->name;
-      $appointmentTypes[$term->tid] = $term->name;
-
-    }
-
-    return $appointmentTypes;
-  }
-
-  /**
-   * Retrieves the list of advisors.
-   *
-   * @return array
-   *   An associative array of advisor IDs and names.
-   */
-  protected function getAdvisors(): array {
-    $advisors = [];
-
-    // Load the user storage service.
-    $user_storage = \Drupal::entityTypeManager()->getStorage('user');
-
-    // Query users with a specific role (e.g., 'advisor').
-    $query = $user_storage->getQuery()
-      ->condition('status', 1) // Only active users.
-      ->condition('roles', 'advisor') // Replace 'advisor' with the correct role machine name.
-      ->sort('name', 'ASC') // Sort by name.
-      ->accessCheck(TRUE); // Explicitly enable access checking.
-
-    // Execute the query and get the user IDs.
-    $uids = $query->execute();
-
-    if (!empty($uids)) {
-      // Load the user entities.
-      $users = $user_storage->loadMultiple($uids);
-
-      // Build the list of advisors.
-      foreach ($users as $user) {
-        $advisors[$user->id()] = $user; // Store the full user object.
-      }
-    }
-
-    return $advisors;
-  }
-
-  protected function renderAppointmentDetails($values) {
-    if (isset($values['selected_slot'])) {
-      $start = $values['selected_slot']['start'];
-      $end = $values['selected_slot']['end'];
-      $title = $values['selected_slot']['title'];
-
-      // Extract date, start hour, and end hour.
-      $date = date('Y-m-d', strtotime($start)); // Format: YYYY-MM-DD
-      $start_time = date('H:i', strtotime($start)); // Format: HH:MM (24-hour format)
-      $end_time = date('H:i', strtotime($end)); // Format: HH:MM (24-hour format)
-
-      return [
-        'date' => $date,
-        'time' => $start_time . ' - ' . $end_time,
-        'title' => $title,
-      ];
-    }
-    return [
-      'date' => 'N/A',
-      'time' => 'N/A',
-      'title' => 'N/A',
-    ];
-  }
-
-  /**
-   * Saves the appointment data.
-   */
-  protected function saveAppointment(array $values): ?int {
-    $appointment_id = $this->appointmentStorage->saveAppointment($values);
-
-    if ($appointment_id) {
-      $fields = $this->appointmentStorage->prepareAppointmentFields($values);
-      $this->appointmentMailer->sendConfirmationEmail($fields, $appointment_id);
-    }
-
-    return $appointment_id;
-  }
-
-  protected function clearTempStore() {
-    $this->tempStore->delete('values');
   }
 
 }

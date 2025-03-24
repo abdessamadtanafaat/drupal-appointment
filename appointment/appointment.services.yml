@@ -17,4 +17,8 @@ services:
       - '@date.formatter'
       - '@current_user'
       - '@logger.factory'
-      -
+      - '@entity_type.manager'
+
+  appointment.form_navigation:
+    class: Drupal\appointment\Service\FormNavigation
+    arguments: ['@tempstore.private','@logger.factory']
