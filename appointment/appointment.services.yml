@@ -2,3 +2,9 @@ services:
   appointment.manager:
     class: 'Drupal\appointment\Service\AppointmentManagerService'
     arguments: ['@entity_type.manager','@database']
+  appointment.mailer:
+    class: Drupal\appointment\Service\AppointmentMailerService
+    arguments:
+      - '@plugin.manager.mail'
+      - '@renderer'
+      - '@logger.factory'
