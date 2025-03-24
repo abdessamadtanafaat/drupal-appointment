@@ -104,9 +104,9 @@ entity.appointment_agency.settings:
 
 
 appointment.availability:
-  path: '/appointment/get-availability'
+  path: '/appointment/get-appointments'
   defaults:
-    _controller: '\Drupal\appointment\Controller\AppointmentController::getAvailability'
+    _controller: '\Drupal\appointment\Controller\AppointmentController::getAppointments'
   requirements:
     _permission: 'access content'
 

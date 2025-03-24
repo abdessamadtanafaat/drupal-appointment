@@ -53,6 +53,42 @@ function appointment_theme() {
       ],
       'template' => 'appointment-confirmation-message',
     ],
-
+    'appointment_confirmation' => [
+      'variables' => [
+        'appointment' => NULL,
+        'appointment_id' => NULL,
+        'start_date' => NULL,
+        'end_date' => NULL,
+        'advisor_name' => NULL,
+        'agency_name' => NULL,
+        'appointment_type' => NULL,
+      ],
+    ],
   ];
+}
+
+/**
+ * Implements hook_mail().
+ */
+function appointment_mail($key, &$message, $params) {
+  \Drupal::logger('appointment')->debug('Building email message', ['key' => $key]);
+
+  switch ($key) {
+    case 'confirmation':
+      $message['subject'] = $params['subject'];
+
+      // Get the renderer service
+      $renderer = \Drupal::service('renderer');
+
+      // Render the template
+      $rendered_body = $renderer->renderPlain($params['body']);
+
+      $message['body'][] = $rendered_body;
+
+      \Drupal::logger('appointment')->debug('Email message prepared', [
+        'subject' => $message['subject'],
+        'body_length' => strlen($rendered_body)
+      ]);
+      break;
+  }
 }

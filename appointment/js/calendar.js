@@ -38,7 +38,7 @@
           events: function(fetchInfo, successCallback, failureCallback) {
             // Make AJAX request to get appointments
             $.ajax({
-              url: '/appointment/get-availability',
+              url: '/appointment/get-appointments',
               type: 'GET',
               dataType: 'json',
               success: function(response) {

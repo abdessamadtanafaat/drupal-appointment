@@ -8,3 +8,4 @@ dependencies:
   - drupal:node
   - drupal:config
   - drupal:office_hours
+  - drupal:symfony_mailer

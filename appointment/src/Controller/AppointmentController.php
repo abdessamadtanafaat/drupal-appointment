@@ -31,11 +31,7 @@ class AppointmentController extends ControllerBase {
    * {@inheritdoc}
    */
 
-  public function getAvailability(Request $request) {
-
-        // Log the AJAX request for debugging.
-        \Drupal::logger('appointment')
-          ->debug('Received AJAX request for advisor availability.');
+  public function getAppointments(Request $request) {
 
         // Get parameters from the request
         $agency_id = $request->query->get('agency_id');
