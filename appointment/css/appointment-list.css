@@ -1,0 +1,96 @@
+/* Main container styling */
+.appointment-list {
+  max-width: 1000px;
+  margin: 2rem auto;
+  padding: 1.5rem;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Header styling */
+.appointment-list h3 {
+  color: #2d3748;
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.appointment-list p {
+  color: #4a5568;
+  margin-bottom: 1.5rem;
+  font-size: 1rem;
+}
+
+/* Table styling */
+.appointment-list table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+/* Table header */
+.appointment-list thead th {
+  background-color: #f7fafc;
+  color: #4a5568;
+  padding: 12px 15px;
+  text-align: left;
+  font-weight: 600;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+/* Table cells */
+.appointment-list tbody td {
+  padding: 12px 15px;
+  border-bottom: 1px solid #edf2f7;
+  color: #2d3748;
+}
+
+/* Alternate row coloring */
+.appointment-list tbody tr:nth-child(even) {
+  background-color: #f8fafc;
+}
+
+/* Hover effect */
+.appointment-list tbody tr:hover {
+  background-color: #ebf8ff;
+}
+
+/* Action button styling */
+.appointment-list .button {
+  display: inline-block;
+  padding: 8px 16px;
+  background-color: #4299e1;
+  color: white;
+  text-decoration: none;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  transition: background-color 0.3s ease;
+}
+
+.appointment-list .button:hover {
+  background-color: #3182ce;
+}
+
+/* No appointments message */
+.appointment-list tbody tr td[colspan] {
+  text-align: center;
+  color: #718096;
+  padding: 20px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .appointment-list {
+    padding: 1rem;
+  }
+
+  .appointment-list table {
+    display: block;
+    overflow-x: auto;
+  }
+
+  .appointment-list th,
+  .appointment-list td {
+    padding: 8px 10px;
+  }
+}

@@ -64,6 +64,44 @@ function appointment_theme() {
         'appointment_type' => NULL,
       ],
     ],
+    'phone_verification_form' => [
+      'variables' => [],
+      'template' => 'phone-verification-form',
+    ],
+
+    'appointment_list' => [
+      'variables' => [
+        'appointments' => [],
+        'phone' => '',
+      ],
+      'template' => 'appointment-list',
+    ],
+
+
+//    'phone_verification' => [
+//      'variables' => [
+//        'image_path' => NULL,
+//        'title' => NULL,
+//        'message' => NULL,
+//      ],
+//      'template' => 'phone-verification',
+//    ],
+//    'appointment_confirmation_message' => [
+//      'variables' => [
+//        'image_path' => NULL,
+//        'title' => NULL,
+//        'message' => NULL,
+//        'change_button' => NULL,
+//      ],
+//      'template' => 'appointment-confirmation-message',
+//    ],
+//    'phone_verification_form' => [
+//      'variables' => [
+//        'image_path' => NULL,
+//      ],
+//      'template' => 'phone-verification',
+//    ],
+
   ];
 }
 

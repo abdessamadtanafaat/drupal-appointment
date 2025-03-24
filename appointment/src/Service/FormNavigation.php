@@ -284,4 +284,28 @@ class FormNavigation {
     $this->logger->notice('Form values saved to tempstore', ['values' => $values]);
   }
 
+  // Add this method to handle phone verification
+  public function buildPhoneVerificationForm(array $values): array {
+    return [
+      '#type' => 'container',
+      '#attributes' => ['class' => ['phone-verification-form']],
+      'phone' => [
+        '#type' => 'tel',
+        '#title' => $this->t('Phone Number'),
+        '#required' => TRUE,
+        '#default_value' => $values['phone'] ?? '',
+        '#attributes' => [
+          'placeholder' => $this->t('Enter the phone number used for booking'),
+          'class' => ['phone-input']
+        ],
+      ],
+      'verify_button' => [
+        '#type' => 'button',
+        '#value' => $this->t('Verify'),
+        '#attributes' => [
+          'class' => ['verify-button']
+        ],
+      ],
+    ];
+  }
 }

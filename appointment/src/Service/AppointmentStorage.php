@@ -2,12 +2,16 @@
 
 namespace Drupal\appointment\Service;
 
+use Drupal\appointment\Entity\Appointment;
 use Drupal\Core\Database\Connection;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Component\Uuid\UuidInterface;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Session\AccountProxyInterface;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Handles appointment database operations.
@@ -51,6 +55,9 @@ class AppointmentStorage {
    */
   protected $logger;
 
+  protected $entityTypeManager;
+
+
   /**
    * Constructs a new AppointmentStorage.
    */
@@ -59,13 +66,17 @@ class AppointmentStorage {
     UuidInterface $uuid_service,
     DateFormatterInterface $date_formatter,
     AccountProxyInterface $current_user,
-    LoggerChannelFactoryInterface $logger_factory
+    LoggerChannelFactoryInterface $logger_factory,
+    EntityTypeManagerInterface $entityTypeManager,
+
   ) {
     $this->database = $database;
     $this->uuidService = $uuid_service;
     $this->dateFormatter = $date_formatter;
     $this->currentUser = $current_user;
     $this->logger = $logger_factory->get('appointment');
+    $this->entityTypeManager = $entityTypeManager;
+
   }
 
   /**
@@ -131,7 +142,7 @@ class AppointmentStorage {
   /**
    * Gets advisor name by ID.
    */
-  protected function getAdvisorName(?int $advisor_id): string {
+  public function getAdvisorName(?int $advisor_id): string {
     if (!$advisor_id) {
       $this->logger->error('Advisor ID is not set.');
       return '';
@@ -155,7 +166,7 @@ class AppointmentStorage {
   /**
    * Gets agency name by ID.
    */
-  protected function getAgencyName(?int $agency_id): string {
+  public function getAgencyName(?int $agency_id): string {
     if (!$agency_id) {
       $this->logger->error('Agency ID is not set.');
       return '';
@@ -179,7 +190,7 @@ class AppointmentStorage {
   /**
    * Gets appointment type name by ID.
    */
-  protected function getAppointmentTypeName(?int $type_id): string {
+  public function getAppointmentTypeName(?int $type_id): string {
     if (!$type_id) {
       $this->logger->error('Appointment Type ID is not set.');
       return '';
@@ -203,7 +214,7 @@ class AppointmentStorage {
   /**
    * Generates appointment description.
    */
-  protected function generateDescription(string $start_date, string $end_date): string {
+  public function generateDescription(string $start_date, string $end_date): string {
     if (!$start_date || !$end_date) {
       return '';
     }
@@ -227,7 +238,8 @@ class AppointmentStorage {
    */
   public function getAgencies(): array {
     // Query for agency entities.
-    $agency_storage = \Drupal::entityTypeManager()->getStorage('appointment_agency');
+    $agency_storage = \Drupal::entityTypeManager()
+      ->getStorage('appointment_agency');
     return $agency_storage->loadMultiple();
   }
 
@@ -249,7 +261,6 @@ class AppointmentStorage {
     foreach ($terms as $term) {
       $appointmentTypes[$term->tid] = $term->name;
       $appointmentTypes[$term->tid] = $term->name;
-
     }
 
     return $appointmentTypes;
@@ -290,5 +301,99 @@ class AppointmentStorage {
     return $advisors;
   }
 
+  /**
+   * Gets appointments filtered by parameters.
+   */
+  public function getAppointments(array $filters = []): array {
+    $query = $this->database->select('appointment', 'a')
+      ->fields('a', [
+        'id',
+        'title',
+        'start_date',
+        'end_date',
+        'appointment_status',
+        'first_name',
+        'last_name',
+        'email',
+        'phone'
+      ]);
 
+    // Add conditions based on filters
+    if (!empty($filters['agency_id'])) {
+      $query->condition('agency_id', $filters['agency_id']);
+    }
+    if (!empty($filters['appointment_type_id'])) {
+      $query->condition('appointment_type', $filters['appointment_type_id']);
+    }
+    if (!empty($filters['advisor_id'])) {
+      $query->condition('advisor_id', $filters['advisor_id']);
+    }
+
+    $results = $query->execute()->fetchAll();
+
+    return $this->formatAppointmentsForCalendar($results);
+  }
+
+  /**
+   * Formats appointments for FullCalendar.
+   */
+  protected function formatAppointmentsForCalendar(array $appointments): array {
+    $events = [];
+
+    foreach ($appointments as $appointment) {
+      $events[] = [
+        'id' => $appointment->id,
+        'title' => $appointment->title ?: ($appointment->first_name . ' ' . $appointment->last_name),
+        'start' => $appointment->start_date,
+        'end' => $appointment->end_date,
+        'status' => $appointment->appointment_status,
+        'editable' => FALSE,
+        'extendedProps' => [
+          'source' => 'server',
+          'firstName' => $appointment->first_name,
+          'lastName' => $appointment->last_name,
+          'email' => $appointment->email,
+          'phone' => $appointment->phone
+        ]
+      ];
+    }
+
+    return $events;
+  }
+
+  public function findByPhone(string $phone): ?Appointment {
+    $query = $this->database->select('appointment', 'a')
+      ->fields('a')
+      ->condition('phone', $phone)
+      ->orderBy('created', 'DESC')
+      ->range(0, 1);
+
+    $result = $query->execute()->fetchAssoc();
+
+    if ($result) {
+      return $this->entityTypeManager
+        ->getStorage('appointment')
+        ->load($result['id']);
+    }
+
+    return NULL;
+  }
+
+  public function findAllByPhone(string $phone): array {
+    $query = $this->database->select('appointment', 'a')
+      ->fields('a')
+      ->condition('phone', $phone)
+      ->orderBy('start_date', 'DESC');
+
+    $results = $query->execute()->fetchAllAssoc('id');
+    $appointments = [];
+
+    foreach ($results as $id => $result) {
+      $appointments[$id] = $this->entityTypeManager
+        ->getStorage('appointment')
+        ->load($id);
+    }
+
+    return $appointments;
+  }
 }

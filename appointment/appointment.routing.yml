@@ -120,6 +120,32 @@ appointment.save_selection:
 #  options:
 #    _auth: [basic_auth]
 
+
+appointment.verify_phone:
+  path: '/appointment/verify'
+  defaults:
+    _form: '\Drupal\appointment\Form\VerifyPhoneForm'
+    _title: 'Verify Your Appointment'
+  requirements:
+    _permission: 'access content'
+
+appointment.view_appointments:
+  path: '/view_appointments'
+  defaults:
+    _form: '\Drupal\appointment\Form\ViewAppointmentsForm'
+    _title: 'View Appointments'
+  requirements:
+    _permission: 'access content'
+
+appointment.modify:
+  path: '/appointment/modify/{id}'
+  defaults:
+    _form: '\Drupal\appointment\Form\ModifyAppointmentForm'
+    _title: 'Modify Appointment'
+  requirements:
+    _permission: 'access content'
+    id: \d+
+
 #appointment.save_personal_information:
 #  path: '/appointment/save-personal-information'
 #  defaults:

@@ -1,0 +1,36 @@
+<div class="appointment-list">
+  <h3>{{ 'Your Appointments'|t }}</h3>
+  <p>{{ 'Phone number:'|t }} {{ phone }}</p>
+
+  <table>
+    <thead>
+    <tr>
+      <th>{{ 'Date'|t }}</th>
+      <th>{{ 'Time'|t }}</th>
+      <th>{{ 'Agency'|t }}</th>
+      <th>{{ 'Actions'|t }}</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for appointment in appointments %}
+      <tr>
+        <td>{{ appointment.get('start_date').value|date('Y-m-d') }}</td>
+        <td>
+          {{ appointment.get('start_date').value|date('H:i') }} -
+          {{ appointment.get('end_date').value|date('H:i') }}
+        </td>
+        <td>{{ appointment.get('agency_id').entity.label() }}</td>
+        <td>
+          <a href="{{ path('appointment.modify', {'id': appointment.id()}) }}" class="button">
+            {{ 'Modify'|t }}
+          </a>
+        </td>
+      </tr>
+    {% else %}
+      <tr>
+        <td colspan="4">{{ 'No appointments found'|t }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>

@@ -6,6 +6,7 @@ use Drupal\appointment\Service\AppointmentMailerService;
 use Drupal\appointment\Service\AppointmentStorage;
 use Drupal\appointment\Service\FormNavigation;
 use Drupal\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
@@ -118,6 +119,9 @@ class BookingForm extends FormBase {
       case 6:
         $form = $this->step6($form, $form_state);
         break;
+      case 7:
+        $form = $this->step7($form, $form_state);
+        break;
       default:
         throw new \InvalidArgumentException('Invalid step');
     }
@@ -161,7 +165,6 @@ class BookingForm extends FormBase {
         '#agency_id' => $agency->id(),
       ];
     }
-
     // Add the agency cards to the form render array.
     $form['agency_cards'] = [
       '#type' => 'container',
@@ -432,6 +435,97 @@ class BookingForm extends FormBase {
     return $form;
   }
 
+
+  // the step7 method
+  public function step7(array &$form, FormStateInterface $form_state) {
+    $form += $this->formNavigation->getFormWrapper();
+
+    // Attach the CSS library
+    $form['#attached']['library'][] = 'appointment/phone_verification_style';
+
+    // Get values from tempstore
+    $values = $this->tempStore->get('values') ?? [];
+
+    // Define the path to the image
+    $image_path = base_path() . \Drupal::service('extension.list.module')->getPath('appointment') . '/assets/verification-icon.png';
+
+    // Render the phone verification form
+    $form['container'] = [
+      '#theme' => 'phone_verification',
+      '#image_path' => $image_path,
+    ];
+
+    // Add navigation buttons
+    $form['actions'] = $this->formNavigation->getNavigationButtons(7);
+
+    return $form;
+  }
+
+  // Add this new method for phone verification
+  public function verifyPhoneNumber(array &$form, FormStateInterface $form_state) {
+  $response = new AjaxResponse();
+  $phone_number = $form_state->getValue('phone');
+
+  // Look up appointment by phone number
+  $appointment = $this->appointmentStorage->findByPhone($phone_number);
+
+    \Drupal::logger('appointment')->notice('appointment from db by phone: ' . $appointment);
+
+
+    if ($appointment) {
+    // If found, load the appointment data into tempstore for modification
+    $values = [
+      'agency_id' => $appointment->get('agency_id')->value,
+      'appointment_type_id' => $appointment->get('appointment_type_id')->value,
+      'appointment_type_name' => $appointment->get('appointment_type_name')->value,
+      'advisor_id' => $appointment->get('advisor_id')->value,
+      'selected_datetime' => $appointment->get('appointment_date')->value,
+      'first_name' => $appointment->get('first_name')->value,
+      'last_name' => $appointment->get('last_name')->value,
+      'phone' => $appointment->get('phone')->value,
+      'email' => $appointment->get('email')->value,
+      'existing_appointment_id' => $appointment->id(),
+    ];
+
+    $this->tempStore->set('values', $values);
+
+    // Redirect to step 1 to start modification
+    $form_state->set('step', 1);
+    $form_state->setRebuild(TRUE);
+    $response->addCommand(new \Drupal\Core\Ajax\ReplaceCommand('#booking-form-wrapper', $form));
+  } else {
+    // Show error if not found
+    $error = [
+      '#type' => 'container',
+      '#attributes' => ['class' => ['messages', 'messages--error']],
+      '#markup' => $this->t('No appointment found with that phone number. Please try again.'),
+    ];
+    $response->addCommand(new \Drupal\Core\Ajax\PrependCommand('#booking-form-wrapper', $error));
+  }
+
+  return $response;
+}
+
+  /**
+   * AJAX callback for phone verification.
+   */
+  public function ajaxSubmitPhone(array &$form, FormStateInterface $form_state) {
+    $phone_number = $form_state->getValue('phone_number');
+
+    if (!preg_match('/^\+?[0-9]{10,15}$/', $phone_number)) {
+      $response = '<p class="error">Invalid phone number. Please enter a valid number.</p>';
+    } else {
+      $response = '<p class="success">Phone number verified successfully!</p>';
+      // Store the phone number (you can extend this to send OTP).
+      $this->tempStore->set('phone_number', $phone_number);
+    }
+
+    $form['verification_message']['#markup'] = '<div id="phone-verification-message">' . $response . '</div>';
+
+    return $form['verification_message'];
+  }
+
+
   /**
    * Handles moving to the next step.
    */
@@ -456,7 +550,7 @@ class BookingForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function validateForm(array &$form, FormStateInterface $form_state) {
+  public function validateForm(array &$form, FormStateInterface $form_state): void {
     parent::validateForm($form, $form_state);
 
     // Get the current step.
@@ -524,17 +618,13 @@ class BookingForm extends FormBase {
     }
   }
 
-  // not knowing the css !
-  public function submitForm(array &$form, FormStateInterface $form_state) {
+  /**
+   * {@inheritdoc}
+   */
+  public function submitForm(array &$form, FormStateInterface $form_state): AjaxResponse {
 
-//    // Check if the form has already been submitted.
-//    if ($form_state->get('submitted')) {
-//      \Drupal::logger('appointment')->notice('Form already submitted, skipping.');
-//      return;
-//    }
-//
-//    // Mark the form as submitted.
-//    $form_state->set('submitted', TRUE);
+    // Mark the form as submitted.
+    $form_state->set('submitted', False);
 
     // Retrieve the appointment data from tempStore.
     $values = $this->tempStore->get('values') ?? [];
@@ -553,7 +643,6 @@ class BookingForm extends FormBase {
       $this->appointmentMailer->sendConfirmationEmail($fields, $appointment_id);
     }
 
-
       // Display a success message.
     \Drupal::messenger()->addMessage($this->t('The appointment is saved.'));
 
@@ -565,20 +654,25 @@ class BookingForm extends FormBase {
 
     // Attach the CSS library.
     $form['#attached']['library'][] = 'appointment/confirmation_style';
+    // Attach necessary libraries
+    $form['#attached']['library'][] = 'appointment/confirmation';
 
-    // Prepare the confirmation message.
     $confirmation_message = [
       '#theme' => 'appointment_confirmation_message',
       '#image_path' => $image_path,
       '#title' => $this->t('Your appointment has been successfully booked.'),
-      '#message' => $this->t('You can modify your appointment by entering your phone number.'),
+      '#message' => $this->t('You can modify your appointment by clicking below.'),
       '#change_button' => [
-        '#type' => 'link',
-        '#title' => $this->t('Change Appointment'),
-        '#url' => \Drupal\Core\Url::fromRoute('<front>'), // Replace with the correct route for changing the appointment.
+        '#type' => 'button',
+        '#value' => $this->t('Change Appointment'),
         '#attributes' => [
           'class' => ['button', 'button--primary'],
+          'id' => 'change-appointment-button',
         ],
+        '#ajax' => [
+          'callback' => '::loadPhoneVerificationForm',
+          'wrapper' => 'booking-form-wrapper',
+        ]
       ],
     ];
 
@@ -591,5 +685,6 @@ class BookingForm extends FormBase {
 
     return $response;
   }
+
 
 }
