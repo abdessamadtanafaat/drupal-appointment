@@ -318,6 +318,7 @@ class AppointmentStorage {
         'phone'
       ]);
 
+
     // Add conditions based on filters
     if (!empty($filters['agency_id'])) {
       $query->condition('agency_id', $filters['agency_id']);

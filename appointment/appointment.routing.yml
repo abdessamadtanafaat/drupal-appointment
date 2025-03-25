@@ -155,6 +155,14 @@ appointment.delete:
     _permission: 'access content'
     id: \d+
 
+appointment.get_working_hours_agency:
+  path: '/appointment/get-working-hours-agency'
+  defaults:
+    _controller: '\Drupal\appointment\Controller\AppointmentController::getWorkingHoursAgency'
+    _title: 'Get Working Hours'
+  requirements:
+    _permission: 'access content'
+
 #appointment.save_personal_information:
 #  path: '/appointment/save-personal-information'
 #  defaults:

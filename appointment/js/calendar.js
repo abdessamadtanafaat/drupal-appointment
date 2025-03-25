@@ -31,34 +31,112 @@
             right: 'dayGridMonth,timeGridWeek,timeGridDay'
           },
           selectable: true, // Enable date selection
+          slotMinTime: '08:00:00',
+          slotMaxTime: '12:00:00',
           editable: true,   // Enable event dragging and resizing
           validRange: {
-            start: new Date(), // Disable dates/times before the current time.
+            start: new Date() },
+          businessHours: {
+            daysOfWeek: [1, 2, 3, 4, 5],
+            startTime: '08:00',
+            endTime: '12:00',
           },
+
           events: function(fetchInfo, successCallback, failureCallback) {
-            // Make AJAX request to get appointments
+            // First AJAX call to get appointments
             $.ajax({
               url: '/appointment/get-appointments',
               type: 'GET',
               dataType: 'json',
-              success: function(response) {
-                // Transform the response to FullCalendar event objects
-                var events = response.map(function(event) {
+              success: function(appointmentsResponse) {
+                // Transform appointments to FullCalendar event objects
+                var appointmentEvents = appointmentsResponse.map(function(event) {
                   return {
                     id: event.id,
                     title: 'UNAVAILABLE',
                     start: event.start,
                     end: event.end,
                     extendedProps: event.extendedProps,
-                    editable: false, // Ensure non-editable
-                    startEditable: false, // Cannot drag to resize start time
-                    durationEditable: false, // Cannot drag to resize duration
-                    backgroundColor: '#d6d6d6', // Optional: different color for non-editable events
-                    borderColor: '#d6d6d6', // different border color
-                    textColor: '#d6d6d6', // different text color
+                    editable: false,
+                    startEditable: false,
+                    durationEditable: false,
+                    backgroundColor: '#d6d6d6',
+                    borderColor: '#d6d6d6',
+                    textColor: '#d6d6d6'
                   };
                 });
-                successCallback(events);
+
+                // Second AJAX call to get working hours for the agency
+                $.ajax({
+                  url: '/appointment/get-working-hours-agency',
+                  type: 'GET',
+                  data: {
+                    agency_id: agency_id
+                  },
+                  dataType: 'json',
+                  success: function(workingHoursResponse) {
+                    // Process working hours only if we got a successful response with data
+                    if (workingHoursResponse.status === 'success' && workingHoursResponse.data.working_hours.length > 0) {
+                      var nonWorkingHoursEvents = [];
+
+                      // Process each day's working hours
+                      workingHoursResponse.data.working_hours.forEach(function(day) {
+                        // Convert hours to proper time format (800 -> 08:00:00)
+                        var startHour = String(day.starthours).padStart(4, '0');
+                        var endHour = String(day.endhours).padStart(4, '0');
+
+                        // Create event for times before working hours
+                        nonWorkingHoursEvents.push({
+                          title: 'NON-WORKING HOURS',
+                          daysOfWeek: [day.day],
+                          startTime: '00:00:00',
+                          endTime: startHour.substring(0, 2) + ':' + startHour.substring(2) + ':00',
+                          display: 'background',
+                          backgroundColor: 'rgba(255, 0, 0, 0.2)',
+                          extendedProps: {
+                            source: 'working_hours',
+                            type: 'before_hours'
+                          },
+                          editable: false
+                        });
+
+                        // Create event for times after working hours
+                        nonWorkingHoursEvents.push({
+                          title: 'NON-WORKING HOURS',
+                          daysOfWeek: [day.day],
+                          startTime: endHour.substring(0, 2) + ':' + endHour.substring(2) + ':00',
+                          endTime: '24:00:00',
+                          display: 'background',
+                          backgroundColor: 'rgba(255, 0, 0, 0.2)',
+                          extendedProps: {
+                            source: 'working_hours',
+                            type: 'after_hours'
+                          },
+                          editable: false
+                        });
+                      });
+
+                      // Combine with appointment events
+                      var allEvents = appointmentEvents.concat(nonWorkingHoursEvents);
+                      successCallback(allEvents);
+
+                      // Set business hours in calendar
+                      calendar.setOption('businessHours', {
+                        daysOfWeek: [0, 1, 2, 3, 4, 5, 6], // All days
+                        startTime: workingHoursResponse.data.working_hours[0].starthours + '',
+                        endTime: workingHoursResponse.data.working_hours[0].endhours + ''
+                      });
+                    } else {
+                      // No working hours available, just show appointments
+                      successCallback(appointmentEvents);
+                    }
+                  },
+                  error: function(xhr, status, error) {
+                    console.error('Failed to fetch working hours:', error);
+                    // Fall back to just showing appointments if working hours fetch fails
+                    successCallback(appointmentEvents);
+                  }
+                });
               },
               error: function(xhr, status, error) {
                 console.error('Failed to fetch appointments:', error);
@@ -66,6 +144,7 @@
               }
             });
           },
+
           // events:
           //   [
           //   // {

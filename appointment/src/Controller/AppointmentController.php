@@ -199,6 +199,72 @@ class AppointmentController extends ControllerBase {
     return new JsonResponse(['status' => 'success']);
   }
 
+  /**
+   * Returns working hours for the specified agency.
+   *
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The HTTP request.
+   *
+   * @return \Symfony\Component\HttpFoundation\JsonResponse
+   *   JSON response containing working hours.
+   */
+  public function getWorkingHoursAgency(Request $request) {
+    // Get agency_id from request parameters
+    $agency_id = $request->query->get('agency_id');
+
+    // Validate agency_id
+    if (empty($agency_id)) {
+      \Drupal::logger('appointment')->error('Missing agency_id parameter in getWorkingHoursAgency');
+      return new JsonResponse([
+        'status' => 'error',
+        'message' => 'agency_id parameter is required'
+      ], 400);
+    }
+
+    try {
+      // Load the agency entity
+      $agency = \Drupal::entityTypeManager()
+        ->getStorage('appointment_agency')
+        ->load($agency_id);
+
+      if (!$agency) {
+        \Drupal::logger('appointment')->error('Agency not found with ID: @id', ['@id' => $agency_id]);
+        return new JsonResponse([
+          'status' => 'error',
+          'message' => 'Agency not found'
+        ], 404);
+      }
+
+      // Get working hours field values
+      $working_hours = [];
+      foreach ($agency->get('working_hours') as $item) {
+        if ($item->day !== NULL && $item->starthours !== NULL && $item->endhours !== NULL) {
+          $working_hours[] = [
+            'day' => (int)$item->day,
+            'starthours' => (int)$item->starthours,
+            'endhours' => (int)$item->endhours,
+            'comment' => $item->comment ?? ''
+          ];
+        }
+      }
+
+      // Return structured response
+      return new JsonResponse([
+        'status' => 'success',
+        'data' => [
+          'agency_name' => $agency->label(),
+          'working_hours' => $working_hours
+        ]
+      ]);
+
+    } catch (\Exception $e) {
+      \Drupal::logger('appointment')->error('Error fetching working hours: @error', ['@error' => $e->getMessage()]);
+      return new JsonResponse([
+        'status' => 'error',
+        'message' => 'An error occurred while fetching working hours'
+      ], 500);
+    }
+  }
 
 //  public function loadVerificationForm() {
 //    $form = [

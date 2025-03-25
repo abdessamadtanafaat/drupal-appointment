@@ -45,6 +45,7 @@ class ModifyAppointmentForm extends FormBase {
       '#options' => $this->getAgencyOptions(),
       '#default_value' => $this->appointment->get('agency_id')->value,
       '#required' => TRUE,
+      '#disabled' => TRUE,
     ];
 
     // Appointment type selection
@@ -54,6 +55,17 @@ class ModifyAppointmentForm extends FormBase {
       '#options' => $this->appointmentStorage->getAppointmentTypes(),
       '#default_value' => $this->appointment->get('appointment_type')->value,
       '#required' => TRUE,
+      '#disabled' => TRUE,
+    ];
+
+    // Advisor selection
+    $form['advisor_id'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Advisor'),
+      '#options' => $this->getAdvisorOptions(),
+      '#default_value' => $this->appointment->get('advisor_id')->value,
+      '#required' => TRUE,
+      '#disabled' => TRUE,
     ];
 
     // Personal information
@@ -76,6 +88,7 @@ class ModifyAppointmentForm extends FormBase {
       '#title' => $this->t('Email'),
       '#default_value' => $this->appointment->get('email')->value,
       '#required' => TRUE,
+
     ];
 
     $form['phone'] = [
@@ -85,21 +98,13 @@ class ModifyAppointmentForm extends FormBase {
       '#required' => TRUE,
     ];
 
-    // Advisor selection
-    $form['advisor_id'] = [
-      '#type' => 'select',
-      '#title' => $this->t('Advisor'),
-      '#options' => $this->getAdvisorOptions(),
-      '#default_value' => $this->appointment->get('advisor_id')->value,
-      '#required' => TRUE,
-    ];
-
     // Date and time
     $form['start_date'] = [
       '#type' => 'datetime',
       '#title' => $this->t('Start Date & Time'),
       '#default_value' => DrupalDateTime::createFromTimestamp(strtotime($this->appointment->get('start_date')->value)),
       '#required' => TRUE,
+
     ];
 
     $form['end_date'] = [
@@ -136,21 +141,21 @@ class ModifyAppointmentForm extends FormBase {
 
   public function submitForm(array &$form, FormStateInterface $form_state) {
     // Update all fields from the form
-    $this->appointment->set('agency_id', $form_state->getValue('agency_id'));
-    $this->appointment->set('appointment_type', $form_state->getValue('appointment_type_id'));
+//    $this->appointment->set('agency_id', $form_state->getValue('agency_id'));
+//    $this->appointment->set('appointment_type', $form_state->getValue('appointment_type_id'));
     $this->appointment->set('first_name', $form_state->getValue('first_name'));
     $this->appointment->set('last_name', $form_state->getValue('last_name'));
     $this->appointment->set('email', $form_state->getValue('email'));
     $this->appointment->set('phone', $form_state->getValue('phone'));
-    $this->appointment->set('advisor_id', $form_state->getValue('advisor_id'));
+//    $this->appointment->set('advisor_id', $form_state->getValue('advisor_id'));
     $this->appointment->set('start_date', $form_state->getValue('start_date')->format('Y-m-d\TH:i:s'));
     $this->appointment->set('end_date', $form_state->getValue('end_date')->format('Y-m-d\TH:i:s'));
     $this->appointment->set('title', $form_state->getValue('title'));
 
     // Update derived fields
-    $this->appointment->set('agency', $this->appointmentStorage->getAgencyName($form_state->getValue('agency_id')));
-    $this->appointment->set('appointment_type_name', $this->appointmentStorage->getAppointmentTypeName($form_state->getValue('appointment_type_id')));
-    $this->appointment->set('advisor', $this->appointmentStorage->getAdvisorName($form_state->getValue('advisor_id')));
+//    $this->appointment->set('agency', $this->appointmentStorage->getAgencyName($form_state->getValue('agency_id')));
+//    $this->appointment->set('appointment_type_name', $this->appointmentStorage->getAppointmentTypeName($form_state->getValue('appointment_type_id')));
+//    $this->appointment->set('advisor', $this->appointmentStorage->getAdvisorName($form_state->getValue('advisor_id')));
     $this->appointment->set('description', $this->appointmentStorage->generateDescription(
       $form_state->getValue('start_date')->format('Y-m-d\TH:i:s'),
       $form_state->getValue('end_date')->format('Y-m-d\TH:i:s')
