@@ -137,16 +137,51 @@ final class Agency extends ContentEntityBase implements AgencyInterface {
       ])
       ->setDisplayConfigurable('view', TRUE);
 
-    // Add the working hours field.
     $fields['working_hours'] = BaseFieldDefinition::create('office_hours')
       ->setLabel(t('Working Hours'))
       ->setDescription(t('The working hours of the agency.'))
-      ->setCardinality(7) // Allow 7 values (one for each day of the week).
+      ->setCardinality(7) // Allow 7 values (one for each day of the week)
+      ->setDefaultValue([
+        [
+          'day' => 0, // Sunday
+          'starthours' => 800,  // 8:00 in 24-hour format without colon
+          'endhours' => 1200,    // 12:00
+        ],
+        [
+          'day' => 1, // Monday
+          'starthours' => 800,
+          'endhours' => 1200,
+        ],
+        [
+          'day' => 2, // Tuesday
+          'starthours' => 800,
+          'endhours' => 1200,
+        ],
+        [
+          'day' => 3, // Wednesday
+          'starthours' => 800,
+          'endhours' => 1200,
+        ],
+        [
+          'day' => 4, // Thursday
+          'starthours' => 800,
+          'endhours' => 1200,
+        ],
+        [
+          'day' => 5, // Friday
+          'starthours' => 800,
+          'endhours' => 1200,
+        ],
+        [
+          'day' => 6, // Saturday
+          'starthours' => 800,
+          'endhours' => 1200,
+        ],
+      ])
       ->setDisplayOptions('form', [
         'type' => 'office_hours_default',
         'weight' => -4,
       ])
-
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayOptions('view', [
         'label' => 'above',
