@@ -68,7 +68,6 @@ function appointment_theme() {
       'variables' => [],
       'template' => 'phone-verification-form',
     ],
-
     'appointment_list' => [
       'variables' => [
         'appointments' => [],
@@ -76,31 +75,20 @@ function appointment_theme() {
       ],
       'template' => 'appointment-list',
     ],
+    'appointment_cancellation' => [
+      'variables' => [
+        'appointment' => [],
+        'appointment_id' => NULL,
+        'start_date' => NULL,
+        'end_date' => NULL,
+        'advisor_name' => NULL,
+        'agency_name' => NULL,
+        'appointment_type' => NULL,
+      ],
+      'template' => 'appointment-cancellation',
+    ],
 
 
-//    'phone_verification' => [
-//      'variables' => [
-//        'image_path' => NULL,
-//        'title' => NULL,
-//        'message' => NULL,
-//      ],
-//      'template' => 'phone-verification',
-//    ],
-//    'appointment_confirmation_message' => [
-//      'variables' => [
-//        'image_path' => NULL,
-//        'title' => NULL,
-//        'message' => NULL,
-//        'change_button' => NULL,
-//      ],
-//      'template' => 'appointment-confirmation-message',
-//    ],
-//    'phone_verification_form' => [
-//      'variables' => [
-//        'image_path' => NULL,
-//      ],
-//      'template' => 'phone-verification',
-//    ],
 
   ];
 }
@@ -113,6 +101,7 @@ function appointment_mail($key, &$message, $params) {
 
   switch ($key) {
     case 'confirmation':
+    case 'cancellation':  // Add this case to handle both email types
       $message['subject'] = $params['subject'];
 
       // Get the renderer service
@@ -121,11 +110,16 @@ function appointment_mail($key, &$message, $params) {
       // Render the template
       $rendered_body = $renderer->renderPlain($params['body']);
 
+      // Add HTML headers
+      $message['headers']['Content-Type'] = 'text/html; charset=UTF-8';
+      $message['headers']['MIME-Version'] = '1.0';
+
       $message['body'][] = $rendered_body;
 
       \Drupal::logger('appointment')->debug('Email message prepared', [
         'subject' => $message['subject'],
-        'body_length' => strlen($rendered_body)
+        'body_length' => strlen($rendered_body),
+        'key' => $key  // Log which type of email we're processing
       ]);
       break;
   }

@@ -20,9 +20,15 @@
           {{ appointment.get('end_date').value|date('H:i') }}
         </td>
         <td>{{ appointment.get('agency_id').entity.label() }}</td>
-        <td>
-          <a href="{{ path('appointment.modify', {'id': appointment.id()}) }}" class="button">
+        <td class="appointment-actions">
+          <a href="{{ path('appointment.modify', {'id': appointment.id()}) }}"
+             class="button button--primary">
             {{ 'Modify'|t }}
+          </a>
+          <a href="{{ path('appointment.delete', {'id': appointment.id()}) }}"
+             class="button button--danger"
+             onclick="return confirm('{{ 'Are you sure you want to cancel this appointment?'|t }}')">
+            {{ 'Cancel'|t }}
           </a>
         </td>
       </tr>

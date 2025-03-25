@@ -383,7 +383,10 @@ class AppointmentStorage {
     $query = $this->database->select('appointment', 'a')
       ->fields('a')
       ->condition('phone', $phone)
+      ->condition('appointment_status', 'cancelled', '<>')
+      ->condition('status', 1)
       ->orderBy('start_date', 'DESC');
+//    ->accessCheck(FALSE); // Only if you need to bypass access checking
 
     $results = $query->execute()->fetchAllAssoc('id');
     $appointments = [];
@@ -396,4 +399,51 @@ class AppointmentStorage {
 
     return $appointments;
   }
+
+  /**
+   * Soft deletes an appointment.
+   */
+  public function softDelete(int $appointment_id): bool {
+    try {
+      $this->database->update('appointment')
+        ->fields([
+          'appointment_status' => 'cancelled',
+          'status' => 0, // 0 for inactive/deleted
+          'changed' => \Drupal::time()->getRequestTime(),
+        ])
+        ->condition('id', $appointment_id)
+        ->execute();
+
+      return true;
+    } catch (\Exception $e) {
+      $this->logger->error('Failed to soft delete appointment: @error', [
+        '@error' => $e->getMessage()
+      ]);
+      return false;
+    }
+  }
+
+//  /**
+//   * Updates advisor availability when appointment is cancelled.
+//   */
+//  public function updateAdvisorAvailability(int $advisor_id, string $start_date, string $end_date): bool {
+//    try {
+//      // Implement your availability logic here
+//      // This is just an example - adjust based on your availability system
+//      $this->database->update('advisor_availability')
+//        ->fields(['available' => 1])
+//        ->condition('advisor_id', $advisor_id)
+//        ->condition('start_time', $start_date)
+//        ->condition('end_time', $end_date)
+//        ->execute();
+//
+//      return true;
+//    } catch (\Exception $e) {
+//      $this->logger->error('Failed to update advisor availability: @error', [
+//        '@error' => $e->getMessage()
+//      ]);
+//      return false;
+//    }
+//  }
+//
 }

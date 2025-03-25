@@ -2,6 +2,7 @@
 
 namespace Drupal\appointment\Service;
 
+use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Mail\MailManagerInterface;
 use Drupal\Core\Render\RendererInterface;
@@ -35,6 +36,8 @@ class AppointmentMailerService {
    */
   protected $logger;
 
+  protected $dateFormatter;
+
   /**
    * Constructs a new AppointmentMailer.
    *
@@ -48,11 +51,15 @@ class AppointmentMailerService {
   public function __construct(
     MailManagerInterface $mail_manager,
     RendererInterface $renderer,
-    LoggerChannelFactoryInterface $logger_factory
+    LoggerChannelFactoryInterface $logger_factory,
+    DateFormatterInterface $date_formatter
+
   ) {
     $this->mailManager = $mail_manager;
     $this->renderer = $renderer;
     $this->logger = $logger_factory->get('appointment');
+    $this->dateFormatter = $date_formatter;
+
   }
 
   /**
@@ -134,6 +141,93 @@ class AppointmentMailerService {
 
     } catch (\Exception $e) {
       \Drupal::logger('appointment')->error('Email sending exception', [
+        'error' => $e->getMessage(),
+        'trace' => $e->getTraceAsString(),
+        'appointment_id' => $appointment_id
+      ]);
+      return FALSE;
+    }
+  }
+
+  /**
+   * Sends an appointment cancellation email.
+   *
+   * @param array $appointment
+   *   The appointment data.
+   * @param int $appointment_id
+   *   The appointment ID.
+   *
+   * @return bool
+   *   TRUE if email was sent successfully, FALSE otherwise.
+   */
+  public function sendCancellationEmail(array $appointment, int $appointment_id): bool {
+    \Drupal::logger('appointment')->debug('Preparing cancellation email', [
+      'appointment_id' => $appointment_id,
+      'recipient' => $appointment['email']
+    ]);
+
+    $mailManager = \Drupal::service('plugin.manager.mail');
+    $langcode = \Drupal::currentUser()->getPreferredLangcode();
+
+    try {
+      // Format dates
+      $start_date = $this->dateFormatter->format(strtotime($appointment['start_date']), 'custom', 'F j, Y g:i a');
+      $end_date = $this->dateFormatter->format(strtotime($appointment['end_date']), 'custom', 'g:i a');
+
+      \Drupal::logger('appointment')->debug('Cancellation email date formatting complete', [
+        'start_date' => $start_date,
+        'end_date' => $end_date
+      ]);
+
+      $params = [
+        'subject' => t('Your appointment cancellation confirmation'),
+        'body' => [
+          '#theme' => 'appointment_cancellation',
+          '#appointment' => $appointment,
+          '#appointment_id' => $appointment_id,
+          '#start_date' => $start_date,
+          '#end_date' => $end_date,
+          '#advisor_name' => $appointment['advisor'],
+          '#agency_name' => $appointment['agency'],
+          '#appointment_type' => $appointment['appointment_type_name'],
+        ],
+      ];
+
+      $to = $appointment['email'];
+
+      \Drupal::logger('appointment')->debug('Attempting to send cancellation email', [
+        'to' => $to,
+        'params' => $params
+      ]);
+
+      $result = $mailManager->mail(
+        'appointment',
+        'cancellation',
+        $to,
+        $langcode,
+        $params,
+        NULL,
+        TRUE
+      );
+
+      if ($result['result'] !== TRUE) {
+        \Drupal::logger('appointment')->error('Cancellation email sending failed', [
+          'error' => $result['message'] ?? 'Unknown error',
+          'to' => $to,
+          'appointment_id' => $appointment_id
+        ]);
+        return FALSE;
+      }
+
+      \Drupal::logger('appointment')->notice('Cancellation email sent successfully', [
+        'to' => $to,
+        'message_id' => $result['message_id'] ?? 'unknown'
+      ]);
+
+      return TRUE;
+
+    } catch (\Exception $e) {
+      \Drupal::logger('appointment')->error('Cancellation email sending exception', [
         'error' => $e->getMessage(),
         'trace' => $e->getTraceAsString(),
         'appointment_id' => $appointment_id

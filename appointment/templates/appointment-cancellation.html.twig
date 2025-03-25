@@ -1,0 +1,15 @@
+{# appointment_cancellation.html.twig #}
+<p>{{ 'Dear'|t }} {{ appointment.first_name }} {{ appointment.last_name }},</p>
+
+<p>{{ 'Your appointment has been successfully cancelled:'|t }}</p>
+
+<ul>
+  <li>{{ 'Date:'|t }} {{ start_date }}</li>
+  <li>{{ 'Time:'|t }} {{ end_date }}</li>
+  <li>{{ 'Advisor:'|t }} {{ advisor_name }}</li>
+  <li>{{ 'Agency:'|t }} {{ agency_name }}</li>
+</ul>
+
+<p>{{ 'Reference ID:'|t }} {{ appointment_id }}</p>
+
+<p>{{ 'If you did not request this cancellation, please contact us immediately.'|t }}</p>

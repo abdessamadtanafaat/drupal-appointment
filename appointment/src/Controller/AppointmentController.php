@@ -2,6 +2,8 @@
 
 namespace Drupal\appointment\Controller;
 
+use Drupal\appointment\Entity\Appointment;
+use Drupal\appointment\Service\AppointmentMailerService;
 use Drupal\appointment\Service\AppointmentStorage;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\ReplaceCommand;
@@ -30,6 +32,13 @@ class AppointmentController extends ControllerBase {
 
 
   /**
+   * The appointment mailer service.
+   *
+   * @var \Drupal\appointment\Service\AppointmentMailerService
+   */
+  protected $appointmentMailer;
+
+  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
@@ -37,6 +46,7 @@ class AppointmentController extends ControllerBase {
       $container->get('tempstore.private'),
       $container->get('appointment.storage'),
       $container->get('form_builder'),
+      $container->get('appointment.mailer'),
 
     );
   }
@@ -51,11 +61,13 @@ class AppointmentController extends ControllerBase {
   public function __construct(PrivateTempStoreFactory $tempStoreFactory,
     AppointmentStorage $appointment_storage,
     FormBuilderInterface $form_builder,
+    AppointmentMailerService $appointment_mailer,
 
   ) {
     $this->tempStore = $tempStoreFactory->get('appointment');
     $this->appointmentStorage = $appointment_storage;
     $this->formBuilder = $form_builder;
+    $this->appointmentMailer = $appointment_mailer;
   }
 
   /**
@@ -188,38 +200,86 @@ class AppointmentController extends ControllerBase {
   }
 
 
-  public function loadVerificationForm() {
-    $form = [
-      '#theme' => 'phone_verification_form',
-    ];
+//  public function loadVerificationForm() {
+//    $form = [
+//      '#theme' => 'phone_verification_form',
+//    ];
+//
+//    return new JsonResponse([
+//      'form' => \Drupal::service('renderer')->render($form)
+//    ]);
+//  }
+//
+//  public function verifyPhone(Request $request) {
+//    $phone = $request->request->get('phone');
+//    $storage = \Drupal::service('appointment.storage');
+//    $appointment = $storage->findByPhone($phone);
+//
+//    if ($appointment) {
+//      return new JsonResponse([
+//        'success' => true,
+//        'message' => $this->t('Phone verified successfully')
+//      ]);
+//    }
+//
+//    return new JsonResponse([
+//      'success' => false,
+//      'message' => $this->t('No appointment found with this phone number')
+//    ], 400);
+//  }
 
-    return new JsonResponse([
-      'form' => \Drupal::service('renderer')->render($form)
-    ]);
-  }
 
-  public function verifyPhone(Request $request) {
-    $phone = $request->request->get('phone');
-    $storage = \Drupal::service('appointment.storage');
-    $appointment = $storage->findByPhone($phone);
+  public function delete($id) {
+    try {
+      $appointment = Appointment::load($id);
 
-    if ($appointment) {
-      return new JsonResponse([
-        'success' => true,
-        'message' => $this->t('Phone verified successfully')
-      ]);
+      if (!$appointment) {
+        $this->messenger()->addError($this->t('Appointment not found.'));
+        return $this->redirect('appointment.view_appointments');
+      }
+
+      // Get appointment data for email
+      $appointment_data = [
+        'email' => $appointment->get('email')->value,
+        'start_date' => $appointment->get('start_date')->value,
+        'end_date' => $appointment->get('end_date')->value,
+        'advisor' => $appointment->get('advisor')->value,
+        'agency' => $appointment->get('agency')->value,
+        'appointment_type_name' => $appointment->get('appointment_type_name')->value,
+        'first_name' => $appointment->get('first_name')->value,
+        'last_name' => $appointment->get('last_name')->value,
+      ];
+
+      // Soft delete the appointment
+      $this->appointmentStorage->softDelete($id);
+
+      // Update advisor availability
+//      \Drupal::service('appointment.storage')->updateAdvisorAvailability(
+//        $appointment->get('advisor_id')->value,
+//        $appointment->get('start_date')->value,
+//        $appointment->get('end_date')->value
+//      );
+
+      // Send cancellation email
+      $email_sent = $this->appointmentMailer->sendCancellationEmail($appointment_data, $id);
+
+      if (!$email_sent) {
+        \Drupal::logger('appointment')->error('Failed to send cancellation email for appointment ID: @id', ['@id' => $id]);
+        // You might want to decide whether to continue with deletion if email fails
+      }
+
+      // Soft delete the appointment
+      $this->appointmentStorage->softDelete($id);
+
+      $this->messenger()->addStatus($this->t('Appointment cancelled successfully.'));
+    } catch (\Exception $e) {
+      $this->messenger()->addError($this->t('Failed to cancel appointment.'));
+      \Drupal::logger('appointment')->error($e->getMessage());
     }
 
-    return new JsonResponse([
-      'success' => false,
-      'message' => $this->t('No appointment found with this phone number')
-    ], 400);
+    return $this->redirect('appointment.view_appointments');
   }
 
-//  protected function appointmentExists($phone) {
-//    // Implement your appointment lookup logic
-//    return TRUE; // Temporary
-//  }
 
 
 

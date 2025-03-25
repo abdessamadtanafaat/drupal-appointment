@@ -146,6 +146,15 @@ appointment.modify:
     _permission: 'access content'
     id: \d+
 
+appointment.delete:
+  path: '/appointment/delete/{id}'
+  defaults:
+    _controller: '\Drupal\appointment\Controller\AppointmentController::delete'
+    _title: 'Cancel Appointment'
+  requirements:
+    _permission: 'access content'
+    id: \d+
+
 #appointment.save_personal_information:
 #  path: '/appointment/save-personal-information'
 #  defaults:

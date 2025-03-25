@@ -55,17 +55,17 @@
   background-color: #ebf8ff;
 }
 
-/* Action button styling */
-.appointment-list .button {
-  display: inline-block;
-  padding: 8px 16px;
-  background-color: #4299e1;
-  color: white;
-  text-decoration: none;
-  border-radius: 4px;
-  font-size: 0.875rem;
-  transition: background-color 0.3s ease;
-}
+/*!* Action button styling *!*/
+/*.appointment-list .button {*/
+/*  display: inline-block;*/
+/*  padding: 8px 16px;*/
+/*  background-color: #4299e1;*/
+/*  color: white;*/
+/*  text-decoration: none;*/
+/*  border-radius: 4px;*/
+/*  font-size: 0.875rem;*/
+/*  transition: background-color 0.3s ease;*/
+/*}*/
 
 .appointment-list .button:hover {
   background-color: #3182ce;
@@ -93,4 +93,54 @@
   .appointment-list td {
     padding: 8px 10px;
   }
+}
+
+/* Danger button styles */
+.button--danger {
+  background-color: #dc3545; /* Bootstrap-like danger red */
+  color: white;
+  border: 1px solid #dc3545;
+  padding: 8px 16px;
+  border-radius: 4px;
+  text-decoration: none;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-left: 10px; /* Space from modify button */
+  display: inline-block;
+}
+
+/* Hover state */
+.button--danger:hover,
+.button--danger:focus {
+  background-color: #c82333; /* Darker red */
+  border-color: #bd2130;
+  color: white;
+  text-decoration: none;
+}
+
+/* Active state */
+.button--danger:active {
+  background-color: #bd2130;
+  border-color: #b21f2d;
+  transform: translateY(1px); /* Slight push effect */
+}
+
+/* Focus outline for accessibility */
+.button--danger:focus {
+  outline: 2px solid #dc3545;
+  outline-offset: 2px;
+}
+
+/* If you want the modify button to be different */
+.button--primary {
+  background-color: #2185d0; /* Blue color */
+  color: white;
+  /* ... same other properties as danger button ... */
+}
+
+/* Button container for spacing */
+.appointment-actions {
+  display: flex;
+  gap: 10px; /* Modern way to space buttons */
 }
