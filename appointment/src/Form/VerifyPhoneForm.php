@@ -52,16 +52,31 @@ class VerifyPhoneForm extends FormBase {
     return $form;
   }
 
+  public function validateForm(array &$form, FormStateInterface $form_state) {
+    $phone = $form_state->getValue('phone');
+
+    // 1. Check if phone number is empty (though #required should handle this)
+    if (empty($phone)) {
+      $form_state->setErrorByName('phone', $this->t('Phone number is required.'));
+      return;
+    }
+
+    // 2. Validate phone number format (10 digits)
+    if (!preg_match('/^[0-9]{10}$/', $phone)) {
+      $form_state->setErrorByName('phone', $this->t('Please enter a valid 10-digit phone number (e.g., 0612345678).'));
+      return;
+    }
+
+    // 3. Check if appointment exists (only if format is valid)
+    $appointment = $this->appointmentStorage->findByPhone($phone);
+    if (!$appointment) {
+      $form_state->setErrorByName('phone', $this->t('No appointment found with this phone number. Please verify your entry or contact support.'));
+    }
+  }
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $phone = $form_state->getValue('phone');
-    $appointment = $this->appointmentStorage->findByPhone($phone);
-
-    if ($appointment) {
-      $form_state->setRedirect('appointment.edit_appointment', [], [
-        'query' => ['phone' => $phone]
-      ]);
-    } else {
-      $this->messenger()->addError($this->t('No appointment found with this phone number.'));
-    }
+    $form_state->setRedirect('appointment.view_appointments', [], [
+      'query' => ['phone' => $phone]
+    ]);
   }
 }
