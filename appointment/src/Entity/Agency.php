@@ -146,6 +146,7 @@ final class Agency extends ContentEntityBase implements AgencyInterface {
         'type' => 'office_hours_default',
         'weight' => -4,
       ])
+
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayOptions('view', [
         'label' => 'above',

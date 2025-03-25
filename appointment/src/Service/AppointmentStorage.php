@@ -342,18 +342,12 @@ class AppointmentStorage {
 
     foreach ($appointments as $appointment) {
       $events[] = [
-        'id' => $appointment->id,
-        'title' => $appointment->title ?: ($appointment->first_name . ' ' . $appointment->last_name),
         'start' => $appointment->start_date,
         'end' => $appointment->end_date,
         'status' => $appointment->appointment_status,
         'editable' => FALSE,
         'extendedProps' => [
           'source' => 'server',
-          'firstName' => $appointment->first_name,
-          'lastName' => $appointment->last_name,
-          'email' => $appointment->email,
-          'phone' => $appointment->phone
         ]
       ];
     }

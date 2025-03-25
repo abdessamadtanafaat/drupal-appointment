@@ -46,16 +46,16 @@
                 var events = response.map(function(event) {
                   return {
                     id: event.id,
-                    title: event.title,
+                    title: 'UNAVAILABLE',
                     start: event.start,
                     end: event.end,
                     extendedProps: event.extendedProps,
                     editable: false, // Ensure non-editable
                     startEditable: false, // Cannot drag to resize start time
                     durationEditable: false, // Cannot drag to resize duration
-                    backgroundColor: '#004ff8', // Optional: different color for non-editable events
-                    borderColor: '#0a00e3', // different border color
-                    textColor: '#ffffff', // different text color
+                    backgroundColor: '#d6d6d6', // Optional: different color for non-editable events
+                    borderColor: '#d6d6d6', // different border color
+                    textColor: '#d6d6d6', // different text color
                   };
                 });
                 successCallback(events);
