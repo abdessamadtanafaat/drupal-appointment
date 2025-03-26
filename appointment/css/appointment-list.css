@@ -1,146 +1,215 @@
-/* Main container styling */
+/* Appointment List Container */
 .appointment-list {
-  max-width: 1000px;
+  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  max-width: 1200px;
   margin: 2rem auto;
   padding: 1.5rem;
   background: #fff;
   border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
 }
 
-/* Header styling */
 .appointment-list h3 {
-  color: #2d3748;
+  color: #2c3e50;
   font-size: 1.5rem;
-  margin-bottom: 0.5rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #f0f0f0;
 }
 
 .appointment-list p {
-  color: #4a5568;
+  color: #7f8c8d;
   margin-bottom: 1.5rem;
-  font-size: 1rem;
+  font-size: 0.95rem;
 }
 
-/* Table styling */
+/* Table Styling */
 .appointment-list table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 1rem;
 }
 
-/* Table header */
-.appointment-list thead th {
-  background-color: #f7fafc;
-  color: #4a5568;
+.appointment-list thead {
+  background-color: #3498db;
+  color: white;
+}
+
+.appointment-list th {
   padding: 12px 15px;
   text-align: left;
   font-weight: 600;
-  border-bottom: 2px solid #e2e8f0;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  letter-spacing: 0.5px;
 }
 
-/* Table cells */
-.appointment-list tbody td {
-  padding: 12px 15px;
-  border-bottom: 1px solid #edf2f7;
-  color: #2d3748;
+.appointment-list tbody tr {
+  border-bottom: 1px solid #e0e0e0;
+  transition: background-color 0.2s ease;
 }
 
-/* Alternate row coloring */
 .appointment-list tbody tr:nth-child(even) {
-  background-color: #f8fafc;
+  background-color: #f9f9f9;
 }
 
-/* Hover effect */
 .appointment-list tbody tr:hover {
-  background-color: #ebf8ff;
+  background-color: #f0f7fd;
 }
 
-/*!* Action button styling *!*/
-/*.appointment-list .button {*/
-/*  display: inline-block;*/
-/*  padding: 8px 16px;*/
-/*  background-color: #4299e1;*/
-/*  color: white;*/
-/*  text-decoration: none;*/
-/*  border-radius: 4px;*/
-/*  font-size: 0.875rem;*/
-/*  transition: background-color 0.3s ease;*/
-/*}*/
-
-.appointment-list .button:hover {
-  background-color: #3182ce;
+.appointment-list td {
+  padding: 12px 15px;
+  color: #34495e;
+  vertical-align: middle;
 }
 
-/* No appointments message */
-.appointment-list tbody tr td[colspan] {
-  text-align: center;
-  color: #718096;
-  padding: 20px;
+/* Status Badges */
+.appointment-list td:nth-child(6) {
+  font-weight: 500;
 }
 
-/* Responsive adjustments */
+.appointment-list td:nth-child(6):contains("Pending") {
+  color: #f39c12;
+}
+
+.appointment-list td:nth-child(6):contains("Confirmed") {
+  color: #27ae60;
+}
+
+.appointment-list td:nth-child(6):contains("Cancelled") {
+  color: #e74c3c;
+}
+
+/* Action Buttons */
+.appointment-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.appointment-actions .button {
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.appointment-actions .button--primary {
+  background-color: #3498db;
+  color: white;
+}
+
+.appointment-actions .button--primary:hover {
+  background-color: #2980b9;
+}
+
+.appointment-actions .button--danger {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.appointment-actions .button--danger:hover {
+  background-color: #c0392b;
+}
+
+/* Responsive Table */
 @media (max-width: 768px) {
-  .appointment-list {
-    padding: 1rem;
-  }
-
   .appointment-list table {
     display: block;
     overflow-x: auto;
+    white-space: nowrap;
   }
 
   .appointment-list th,
   .appointment-list td {
-    padding: 8px 10px;
+    min-width: 120px;
+  }
+
+  .appointment-actions {
+    flex-direction: column;
+    gap: 5px;
   }
 }
 
-/* Danger button styles */
-.button--danger {
-  background-color: #dc3545; /* Bootstrap-like danger red */
-  color: white;
-  border: 1px solid #dc3545;
-  padding: 8px 16px;
+/* Empty State */
+.appointment-list tbody tr td[colspan] {
+  text-align: center;
+  padding: 2rem;
+  color: #7f8c8d;
+  font-style: italic;
+}
+
+/* Filter Controls */
+.appointment-filters {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: #f8f9fa;
   border-radius: 4px;
-  text-decoration: none;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  margin-left: 10px; /* Space from modify button */
-  display: inline-block;
 }
 
-/* Hover state */
-.button--danger:hover,
-.button--danger:focus {
-  background-color: #c82333; /* Darker red */
-  border-color: #bd2130;
-  color: white;
-  text-decoration: none;
-}
-
-/* Active state */
-.button--danger:active {
-  background-color: #bd2130;
-  border-color: #b21f2d;
-  transform: translateY(1px); /* Slight push effect */
-}
-
-/* Focus outline for accessibility */
-.button--danger:focus {
-  outline: 2px solid #dc3545;
-  outline-offset: 2px;
-}
-
-/* If you want the modify button to be different */
-.button--primary {
-  background-color: #2185d0; /* Blue color */
-  color: white;
-  /* ... same other properties as danger button ... */
-}
-
-/* Button container for spacing */
-.appointment-actions {
+.appointment-filters form {
   display: flex;
-  gap: 10px; /* Modern way to space buttons */
+  align-items: flex-end;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
+
+.appointment-filters .form-item {
+  margin: 0;
+  flex-grow: 1;
+  min-width: 200px;
+}
+
+.appointment-filters label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #495057;
+}
+
+.appointment-filters .form-select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  background-color: white;
+}
+
+/* Status Badges */
+.status-badge {
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.status-pending {
+  color: #f39c12;
+}
+
+.status-confirmed {
+  color: #27ae60;
+}
+
+.status-cancelled {
+  color: #e74c3c;
+}
+
+.status-completed {
+  color: #3498db;
+}
+
+/* No actions text */
+.no-actions {
+  color: #6c757d;
+  font-style: italic;
+  font-size: 0.9rem;
+}
+
+/* Hide cancelled appointments by default if no filter applied */
+{% if selected_status is empty or selected_status == 'pending' %}
+tr.status-cancelled {
+  display: none;
+}
+{% endif %}

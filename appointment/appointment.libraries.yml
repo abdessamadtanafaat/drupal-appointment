@@ -111,3 +111,6 @@ appointment_list:
   css:
     theme:
       css/appointment-list.css: {}
+  js:
+      js/appointment-list.js: { }
+

@@ -8,6 +8,9 @@
       <th>{{ 'Date'|t }}</th>
       <th>{{ 'Time'|t }}</th>
       <th>{{ 'Agency'|t }}</th>
+      <th>{{ 'Advisor'|t }}</th>
+{#      <th>{{ 'Status'|t }}</th>#}
+      <th>{{ 'Appointment'|t }}</th>
       <th>{{ 'Actions'|t }}</th>
     </tr>
     </thead>
@@ -20,6 +23,9 @@
           {{ appointment.get('end_date').value|date('H:i') }}
         </td>
         <td>{{ appointment.get('agency_id').entity.label() }}</td>
+        <td>{{ appointment.get('advisor').value }}</td>
+{#        <td>{{ appointment.get('status').value }}</td>#}
+        <td>{{ appointment.get('appointment_type_name').value }}</td>
         <td class="appointment-actions">
           <a href="{{ path('appointment.modify', {'id': appointment.id()}) }}"
              class="button button--primary">
