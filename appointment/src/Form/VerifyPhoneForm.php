@@ -27,9 +27,9 @@ class VerifyPhoneForm extends FormBase {
 
   public function buildForm(array $form, FormStateInterface $form_state) {
 
-    // Add the introductory text.
+    // the introductory text.
     $form['intro_text'] = [
-      '#markup' => '<div class="intro-text"><h3>' . $this->t('Enter the phone number associated with your appointment') . '</h3></div>',
+      '#markup' => '<div class="intro-text"><h3>' . $this->t('Enter your booking phone number') . '</h3></div>',
     ];
 
     $form['phone'] = [
@@ -37,7 +37,7 @@ class VerifyPhoneForm extends FormBase {
       '#title' => $this->t('Phone Number'),
       '#required' => TRUE,
       '#attributes' => [
-        'placeholder' => $this->t('Enter the phone number used for booking'),
+        'placeholder' => $this->t('Enter your booking phone number'),
       ],
     ];
 
@@ -45,7 +45,7 @@ class VerifyPhoneForm extends FormBase {
       '#type' => 'actions',
       'submit' => [
         '#type' => 'submit',
-        '#value' => $this->t('Verify'),
+        '#value' => $this->t('Find Appointments'),
       ],
     ];
 
@@ -54,25 +54,33 @@ class VerifyPhoneForm extends FormBase {
 
   public function validateForm(array &$form, FormStateInterface $form_state) {
     $phone = $form_state->getValue('phone');
+    $cleaned_phone = preg_replace('/[^0-9]/', '', $phone);
 
-    // 1. Check if phone number is empty (though #required should handle this)
-    if (empty($phone)) {
+
+    // Check if phone contains only numbers
+    if (!ctype_digit($cleaned_phone)) {
+      $form_state->setErrorByName('phone', $this->t('Phone number must contain only numbers.'));
+      return;
+    }
+
+    if (empty($cleaned_phone)) {
       $form_state->setErrorByName('phone', $this->t('Phone number is required.'));
       return;
     }
 
-    // 2. Validate phone number format (10 digits)
-    if (!preg_match('/^[0-9]{10}$/', $phone)) {
-      $form_state->setErrorByName('phone', $this->t('Please enter a valid 10-digit phone number (e.g., 0612345678).'));
+    if (strlen($cleaned_phone) !== 10) {
+      $form_state->setErrorByName('phone', $this->t('Please enter a valid 10-digit phone number.'));
       return;
     }
 
-    // 3. Check if appointment exists (only if format is valid)
-    $appointment = $this->appointmentStorage->findByPhone($phone);
-    if (!$appointment) {
-      $form_state->setErrorByName('phone', $this->t('No appointment found with this phone number. Please verify your entry or contact support.'));
+    $appointments = $this->appointmentStorage->findAllByPhone($cleaned_phone);
+    if (empty($appointments)) {
+      $form_state->setErrorByName('phone', $this->t('No appointments found for this phone number.'));
     }
+
+    $form_state->setValue('phone', $cleaned_phone);
   }
+
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $phone = $form_state->getValue('phone');
     $form_state->setRedirect('appointment.view_appointments', [], [

@@ -28,34 +28,8 @@ class ViewAppointmentsForm extends FormBase {
   public function buildForm(array $form, FormStateInterface $form_state) {
     $phone = \Drupal::request()->query->get('phone');
 
-    if (empty($phone)) {
-      // If no phone provided, show phone input form
-      return $this->buildPhoneInputForm($form);
-    }
 
-    // If phone provided, show appointments
     return $this->buildAppointmentsList($form, $phone);
-  }
-
-  protected function buildPhoneInputForm(array $form) {
-    $form['phone'] = [
-      '#type' => 'tel',
-      '#title' => $this->t('Phone Number'),
-      '#required' => TRUE,
-      '#attributes' => [
-        'placeholder' => $this->t('Enter your booking phone number'),
-      ],
-    ];
-
-    $form['actions'] = [
-      '#type' => 'actions',
-      'submit' => [
-        '#type' => 'submit',
-        '#value' => $this->t('Find Appointments'),
-      ],
-    ];
-
-    return $form;
   }
 
   protected function buildAppointmentsList(array $form, string $phone) {
@@ -63,7 +37,6 @@ class ViewAppointmentsForm extends FormBase {
     $request = \Drupal::request();
 
     // Get all filter values from URL parameters
-//    $status_filter = $request->query->get('status', '1');
     $date_filter = $request->query->get('date', '');
     $agency_filter = $request->query->get('agency', 'all');
     $advisor_filter = $request->query->get('advisor', 'all');
@@ -73,16 +46,6 @@ class ViewAppointmentsForm extends FormBase {
     $agencies = $this->appointmentStorage->getAgenciesByPhone($phone);
     $advisors = $this->appointmentStorage->getAdvisorsByPhone($phone);
 
-    // Add a back button to return to phone input
-    $form['back'] = [
-      '#type' => 'link',
-      '#title' => $this->t('Back to search'),
-      '#url' => \Drupal\Core\Url::fromRoute('appointment.view_appointments'),
-      '#attributes' => [
-        'class' => ['button'],
-      ],
-      '#weight' => -10,
-    ];
 
     // Add filter controls
     $form['filters'] = [
@@ -91,24 +54,11 @@ class ViewAppointmentsForm extends FormBase {
       '#weight' => -10,
     ];
 
-    // Status filter
-//    $form['filters']['status_filter'] = [
-//      '#type' => 'select',
-//      '#title' => $this->t('Status'),
-//      '#options' => [
-//        'all' => $this->t('All Statuses'),
-//        '1' => $this->t('Pending'),
-//        '2' => $this->t('Completed'),
-//        '0' => $this->t('Cancelled'),
-//      ],
-//      '#default_value' => $status_filter,
-//    ];
-
     // Date filter
     $form['filters']['date_filter'] = [
       '#type' => 'date',
       '#title' => $this->t('Date'),
-      '#default_value' => $date_filter,
+      '#default_value' => $date_filter ?: date('Y-m-d'), // Use provided filter or today's date
     ];
 
     // Agency filter
@@ -150,6 +100,16 @@ class ViewAppointmentsForm extends FormBase {
       ],
     ];
 
+    // Add a back button to return to phone input
+    $form['filters']['back'] = [
+      '#type' => 'link',
+      '#title' => $this->t('Back to search'),
+      '#url' => \Drupal\Core\Url::fromRoute('appointment.verify_phone'),
+      '#attributes' => [
+        'class' => ['button'],
+      ],
+    ];
+
     // Get filtered appointments
     $appointments = $this->appointmentStorage->findAllByPhone($phone, [
 //      'status' => $status_filter,
@@ -170,6 +130,23 @@ class ViewAppointmentsForm extends FormBase {
     ];
 
     return $form;
+  }
+
+  public function resetFilters(array &$form, FormStateInterface $form_state) {
+    $phone = \Drupal::request()->query->get('phone');
+
+    // Clear the form state values for filters
+    $form_state->setValue('date_filter', '');
+    $form_state->setValue('agency_filter', 'all');
+    $form_state->setValue('advisor_filter', 'all');
+
+    // Force a form rebuild
+    $form_state->setRebuild();
+
+    // Redirect to clear URL parameters while keeping the phone
+    $form_state->setRedirect('appointment.view_appointments', [], [
+      'query' => ['phone' => $phone]
+    ]);
   }
 
   /**
@@ -199,9 +176,7 @@ class ViewAppointmentsForm extends FormBase {
   }
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $phone = $form_state->getValue('phone');
-    $form_state->setRedirect('appointment.view_appointments', [], [
-      'query' => ['phone' => $phone]
-    ]);
+    $form_state->setRedirect('appointment.view_appointments', []);
   }
 
 }
