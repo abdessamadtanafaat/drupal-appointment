@@ -373,15 +373,46 @@ class AppointmentStorage {
 
     return NULL;
   }
-  public function findAllByPhone(string $phone, string $status_filter = '1'): array {
+  /**
+   * Finds all appointments by phone number with optional filters.
+   *
+   * @param string $phone
+   *   The phone number to search for.
+   * @param array $filters
+   *   Optional filters array with keys:
+   *   - status: Appointment status (0=cancelled, 1=pending, 2=completed)
+   *   - date: Date string in Y-m-d format
+   *   - agency: Agency ID
+   *   - advisor: Advisor user ID
+   *
+   * @return array
+   *   Array of loaded appointment entities.
+   */
+
+  public function findAllByPhone(string $phone, array $filters = []) {
     $query = $this->database->select('appointment', 'a')
       ->fields('a')
       ->condition('phone', $phone)
       ->orderBy('start_date', 'DESC');
 
     // Apply status filter
-    if ($status_filter !== 'all') {
-      $query->condition('status', (int)$status_filter);
+//    if (!empty($filters['status'])){
+//      $query->condition('status', (int)$filters['status']);
+//    }
+
+    // Apply date filter
+    if (!empty($filters['date'])) {
+      $query->condition('start_date', $filters['date'] . '%', 'LIKE');
+    }
+
+    // Apply agency filter
+    if (!empty($filters['agency']) && $filters['agency'] !== 'all') {
+      $query->condition('agency_id', $filters['agency']);
+    }
+
+    // Apply advisor filter
+    if (!empty($filters['advisor']) && $filters['advisor'] !== 'all') {
+      $query->condition('advisor_id', $filters['advisor']);
     }
 
     $results = $query->execute()->fetchAllAssoc('id');
@@ -394,6 +425,50 @@ class AppointmentStorage {
     }
 
     return $appointments;
+  }
+
+  /**
+   * Gets agencies associated with appointments for a specific phone number.
+   */
+  public function getAgenciesByPhone(string $phone): array {
+    $query = $this->database->select('appointment', 'a');
+    $query->join('appointment_agency', 'ag', 'a.agency_id = ag.id');
+    $query->fields('ag', ['id', 'name'])
+      ->condition('a.phone', $phone)
+      ->groupBy('ag.id')
+      ->groupBy('ag.name')
+      ->orderBy('ag.name');
+
+    $results = $query->execute()->fetchAll();
+    $agencies = [];
+
+    foreach ($results as $result) {
+      $agencies[$result->id] = $result->name;
+    }
+
+    return $agencies;
+  }
+
+  /**
+   * Gets advisors associated with appointments for a specific phone number.
+   */
+  public function getAdvisorsByPhone(string $phone): array {
+    $query = $this->database->select('appointment', 'a');
+    $query->join('users_field_data', 'u', 'a.advisor_id = u.uid');
+    $query->fields('u', ['uid', 'name'])
+      ->condition('a.phone', $phone)
+      ->groupBy('u.uid')
+      ->groupBy('u.name')
+      ->orderBy('u.name');
+
+    $results = $query->execute()->fetchAll();
+    $advisors = [];
+
+    foreach ($results as $result) {
+      $advisors[$result->uid] = $result->name;
+    }
+
+    return $advisors;
   }
 
 
