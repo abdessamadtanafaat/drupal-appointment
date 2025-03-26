@@ -85,55 +85,6 @@ class AppointmentController extends ControllerBase {
     $events = $this->appointmentStorage->getAppointments($filters);
     return new JsonResponse($events);
 
-//        // Query the database for appointments
-//        $database = \Drupal::database();
-//        $query = $database->select('appointment', 'a')
-//          ->fields('a', [
-//            'id',
-//            'title',
-//            'start_date',
-//            'end_date',
-//            'appointment_status',
-//            'first_name',
-//            'last_name',
-//            'email',
-//            'phone'
-//          ]);
-//
-//        // Add conditions based on the parameters
-//        if ($agency_id) {
-//          $query->condition('agency_id', $agency_id);
-//        }
-//        if ($appointment_type_id) {
-//          $query->condition('appointment_type', $appointment_type_id);
-//        }
-//        if ($advisor_id) {
-//          $query->condition('advisor_id', $advisor_id);
-//        }
-//
-//        $appointments = $query->execute()->fetchAll();
-//
-//        // Format the results for FullCalendar
-//        $events = [];
-//        foreach ($appointments as $appointment) {
-//          $events[] = [
-//            'id' => $appointment->id,
-//            'title' => $appointment->title ?: ($appointment->first_name . ' ' . $appointment->last_name),
-//            'start' => $appointment->start_date,
-//            'end' => $appointment->end_date,
-//            'status' => $appointment->appointment_status,
-//            'editable' => false,
-//            'extendedProps' => [
-//              'source' => 'server', // flag to market it's comming from the server == to be not editable in JS
-//              'firstName' => $appointment->first_name,
-//              'lastName' => $appointment->last_name,
-//              'email' => $appointment->email,
-//              'phone' => $appointment->phone
-//            ]
-//          ];
-//        }
-//
-//        return new JsonResponse($events);
   }
 
   /**
@@ -266,35 +217,6 @@ class AppointmentController extends ControllerBase {
     }
   }
 
-//  public function loadVerificationForm() {
-//    $form = [
-//      '#theme' => 'phone_verification_form',
-//    ];
-//
-//    return new JsonResponse([
-//      'form' => \Drupal::service('renderer')->render($form)
-//    ]);
-//  }
-//
-//  public function verifyPhone(Request $request) {
-//    $phone = $request->request->get('phone');
-//    $storage = \Drupal::service('appointment.storage');
-//    $appointment = $storage->findByPhone($phone);
-//
-//    if ($appointment) {
-//      return new JsonResponse([
-//        'success' => true,
-//        'message' => $this->t('Phone verified successfully')
-//      ]);
-//    }
-//
-//    return new JsonResponse([
-//      'success' => false,
-//      'message' => $this->t('No appointment found with this phone number')
-//    ], 400);
-//  }
-
-
   public function delete($id) {
     try {
       $appointment = Appointment::load($id);
@@ -345,8 +267,5 @@ class AppointmentController extends ControllerBase {
 
     return $this->redirect('appointment.view_appointments');
   }
-
-
-
 
 }
