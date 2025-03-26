@@ -2,18 +2,21 @@
 This is a custom Drupal module that allows users to book appointments.
 ## Features
 - Book an appointment
-- List all appointments
-- Manage appointment settings
+- Appointment Management
+- Agency and Adviser Management
+- Administrative Features
+
 ## Installation
 1. Place the `appointment` module in the `/modules/custom/` directory of your Drupal installation.
 2. Enable the module via the Drupal admin interface or use Drush with the following command:
    ```bash
    drush en appointment -y
-
+    ```
 ## Installation Output
 ![Installation Output](Guide/enable_module.png)
 - A new taxonomy vocabulary named Appointment Types is created.
-- Two taxonomy terms are created under the Appointment Types vocabulary: Business Appointment, Professional Staff
+- Two taxonomy terms are created under the Appointment Types vocabulary:
+Business Appointment, Professional Staff
 - A new role named Advisor is created.
 - A new user with the Advisor role is created.
 # How to Book an Appointment
@@ -32,27 +35,30 @@ Follow these steps to book an appointment using the system:
 1. **Choose an Appointment Type:**
   - A list of appointment types (e.g., Business Appointment, Professional Staff) will be displayed.
   - Select the type of appointment you need.
-   ![Step 2: Select Appointment Type](Guide/step2.png)
+    ![Step 2: Select Appointment Type](Guide/step2.png)
 2. **Click "Next":**
   - After selecting an appointment type, click the **Next** button to proceed.
 ### Step 3: Select an Advisor
 #### Choose an Advisor:
 - A list of available advisors will be displayed.
 - Select the advisor you want to book the appointment with.
-  ![Step 3: Select Advisor](Guide/step3.png)
+  ![Step 3: Select Advisor](Guide/step4.png)
 #### Click "Next":
 - After selecting an advisor, click the **Next** button to proceed.
 ---
 ### Step 4: Select Date and Time
-![Step 4: Select Date and Time](Guide/step4.png)
+
+![Step 4: Select Date and Time](Guide/step5.png)
 #### Choose a Date and Time:
 - A calendar will be displayed, showing available time slots.
 - Select a date and time for your appointment.
 #### Click "Next":
 - After selecting a date and time, click the **Next** button to proceed.
 ---
+the user cannot
 ### Step 5: Enter Personal Information
-![Step 5: Enter Personal Information](Guide/step5.png)
+
+![Step 5: Enter Personal Information](Guide/step6.png)
 #### Fill in Your Details:
 Enter your personal information, including:
 - **First Name**
@@ -64,7 +70,8 @@ Enter your personal information, including:
 - After filling in your details, click the **Next** button to proceed.
 ---
 ### Step 6: Confirm Appointment
-![Step 6: Confirm Appointment](Guide/step6.png)
+
+![Step 6: Confirm Appointment](Guide/step7.png)
 #### Review Your Appointment Details:
 A summary of your appointment details will be displayed, including:
 - **Appointment Type**
@@ -80,6 +87,14 @@ A summary of your appointment details will be displayed, including:
 - **Advisor**
 - **Date and Time**
 - **Your Personal Information**
+
+
+  Click Confirm :
+
+
+  ![Step 6: Confirm Appointment](Guide/step8.png)
+
+An email will be sent to your inbox.
 ### Email Confirmation
 ![Email: Confirm Appointment](Guide/email_confirmation.png)
 
@@ -88,6 +103,43 @@ A summary of your appointment details will be displayed, including:
 ## Database Schema :
 ![Database](Guide/database.png)
 ![Table Appointment](Guide/table_appointment.png)
+
+## Appointment Management :
+
+* Modify by entering your phone :
+
+![Verify Your phone](Guide/verify_phone.png)
+
+* Validation :
+
+![Verify Your phone](Guide/validation1.png)
+![Verify Your phone](Guide/validation2.png)
+
+* List of your Appointments :
+
+![List of your Appointments](Guide/appointments1.png)
+![List of your Appointments](Guide/appointments2.png)
+
+* Click Modify :
+
+![Modify](Guide/modify.png)
+![Modify](Guide/modify1.png)
+![Modify](Guide/modify2.png)
+![Modify](Guide/modify3.png)
+
+* Date and Time Validation :
+
+![Modify](Guide/modify4.png)
+
+
+* Cancel your appointment :
+
+![Cancel](Guide/cancel.png)
+
+The user receive an email confirm the cancel.
+
+![Cancel](Guide/cancelation_email.png)
+
 ## BackOffice Administration :
 ![Appointments](Guide/appointment_admin.png)
 ![Agencies](Guide/agencies_admin.png)

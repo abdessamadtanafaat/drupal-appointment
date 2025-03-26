@@ -502,13 +502,20 @@ class AppointmentStorage {
    *   The start date in 'Y-m-d\TH:i:s' format.
    * @param string $end_date
    *   The end date in 'Y-m-d\TH:i:s' format.
-   * @param int $exclude_id
+   * @param int|null $exclude_id
    *   The appointment ID to exclude from the check.
    *
    * @return array
    *   Array of conflicting appointments.
    */
-  public function checkTimeConflict($start_date, $end_date, $exclude_id = NULL) {
+
+  public function checkTimeConflict(string $start_date, string $end_date, int $exclude_id = NULL): array {
+    \Drupal::logger('appointment')->debug('checkTimeConflict called with:', [
+      'start_date' => $start_date,
+      'end_date' => $end_date,
+      'exclude_id' => $exclude_id,
+    ]);
+
     $query = $this->database->select('appointment', 'a')
       ->fields('a', ['id', 'start_date', 'end_date'])
       ->condition('a.start_date', $end_date, '<')
@@ -519,7 +526,16 @@ class AppointmentStorage {
       $query->condition('a.id', $exclude_id, '<>');
     }
 
-    return $query->execute()->fetchAll();
-  }
+    $result = $query->execute()->fetchAll();
 
+    \Drupal::logger('appointment')->debug('checkTimeConflict SQL query: @query', [
+      '@query' => $query->__toString(),
+    ]);
+
+    \Drupal::logger('appointment')->debug('checkTimeConflict found @count results', [
+      '@count' => count($result),
+    ]);
+
+    return $result;
+  }
 }

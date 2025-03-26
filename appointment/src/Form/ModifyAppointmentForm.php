@@ -38,25 +38,8 @@ class ModifyAppointmentForm extends FormBase {
       return $form;
     }
 
-    // Agency selection
-//    $form['agency_id'] = [
-//      '#type' => 'select',
-//      '#title' => $this->t('Agency'),
-//      '#options' => $this->getAgencyOptions(),
-//      '#default_value' => $this->appointment->get('agency_id')->value,
-//      '#required' => TRUE,
-//      '#disabled' => TRUE,
-//    ];
-
-    // Appointment type selection
-//    $form['appointment_type_id'] = [
-//      '#type' => 'select',
-//      '#title' => $this->t('Appointment Type'),
-//      '#options' => $this->appointmentStorage->getAppointmentTypes(),
-//      '#default_value' => $this->appointment->get('appointment_type')->value,
-//      '#required' => TRUE,
-//      '#disabled' => TRUE,
-//    ];
+    // Get the phone number from the appointment
+    $phone = $this->appointment->get('phone')->value;
 
     // Bloc 1: Appointment Details (read-only)
     $form['appointment_details'] = [
@@ -165,8 +148,6 @@ class ModifyAppointmentForm extends FormBase {
     ];
 
 
-
-
     $form['actions'] = [
       '#type' => 'actions',
       'submit' => [
@@ -176,7 +157,7 @@ class ModifyAppointmentForm extends FormBase {
       'cancel' => [
         '#type' => 'link',
         '#title' => $this->t('Cancel'),
-        '#url' => \Drupal\Core\Url::fromRoute('appointment.view_appointments'),
+        '#url' => \Drupal\Core\Url::fromRoute('appointment.view_appointments', ['phone' => $phone]),
         '#attributes' => ['class' => ['button']],
       ],
     ];
@@ -197,6 +178,9 @@ class ModifyAppointmentForm extends FormBase {
       return;
     }
 
+    // Debug: Log before checking time conflicts
+    \Drupal::logger('appointment')->debug('Checking for time conflicts...');
+
     // Check for conflicting appointments (excluding current appointment)
     $conflicts = $this->appointmentStorage->checkTimeConflict(
       $start_date,
@@ -204,9 +188,18 @@ class ModifyAppointmentForm extends FormBase {
       $this->appointment->id() // Exclude current appointment from conflict check
     );
 
+    // Debug: Log the conflicts found
+    \Drupal::logger('appointment')->debug('Time conflict check results: @conflicts', [
+      '@conflicts' => print_r($conflicts, TRUE),
+    ]);
+
+
     if (!empty($conflicts)) {
+      \Drupal::logger('appointment')->debug('Validation failed: Time conflict detected');
       $form_state->setErrorByName('start_date', $this->t('The selected time slot is already taken. Please choose another time.'));
       $form_state->setErrorByName('end_date');
+    } else {
+      \Drupal::logger('appointment')->debug('No time conflicts found');
     }
   }
 
@@ -235,7 +228,10 @@ class ModifyAppointmentForm extends FormBase {
     $this->appointment->save();
 
     $this->messenger()->addStatus($this->t('Appointment updated successfully.'));
-    $form_state->setRedirect('appointment.view_appointments');
+    // Redirect with phone parameter
+    $form_state->setRedirect('appointment.view_appointments', [
+      'phone' => $form_state->getValue('phone')
+    ]);
   }
 
   protected function getAgencyOptions(): array {
